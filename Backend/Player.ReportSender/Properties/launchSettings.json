@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Player.ReportSender": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

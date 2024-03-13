@@ -1,0 +1,60 @@
+build-playlist-generator-master:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  only:
+    refs:
+      - master
+    changes:
+      - Backend/**/*
+      - devops/docker-images/Dockerfile-playlist-generator
+      - devops/playlist-generator.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/playlist-generator:latest -f ./devops/docker-images/Dockerfile-playlist-generator ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}/playlist-generator:latest
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build
+  tags:
+    - docker
+    - walkman
+
+build-playlist-generator-dev:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  except:
+    refs:
+      - master
+  only:
+    changes:
+      - Backend/**/*
+      - devops/docker-images/Dockerfile-playlist-generator
+      - devops/playlist-generator.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/playlist-generator:dev -f ./devops/docker-images/Dockerfile-playlist-generator ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}/playlist-generator:dev
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build
+  tags:
+    - docker
+    - walkman

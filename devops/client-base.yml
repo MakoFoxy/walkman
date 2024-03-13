@@ -1,0 +1,56 @@
+build-client-base-image-master:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  only:
+    refs:
+      - master
+    changes:
+      - devops/docker-images/Dockerfile-client-base
+      - devops/client-base.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/client-base-image:latest -f ./devops/docker-images/Dockerfile-client-base ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}/client-base-image:latest
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build-base
+  tags:
+    - docker
+
+build-client-base-image-dev:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  except:
+    refs:
+      - master
+  only:
+    changes:
+      - devops/docker-images/Dockerfile-client-base
+      - devops/client-base.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/client-base-image:dev -f ./devops/docker-images/Dockerfile-client-base ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}/client-base-image:dev
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build-base
+  tags:
+    - docker

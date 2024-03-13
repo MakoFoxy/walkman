@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>[client-name]</title>
+    <style>
+        table {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            page-break-after: always;
+        }
+
+        table td, table th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        table tr:nth-child(even){background-color: #f2f2f2;}
+
+        table th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        body {
+            margin-bottom: 2pt;
+        }
+
+        thead { display: table-header-group }
+        tfoot { display: table-row-group }
+        tr { page-break-inside: avoid }
+        h1, h2{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Отчет для [client-name]</h1>
+    <h2>Ролики транслируются на  объектах согласно Договора ____________________</h2>
+    <h2>Время выхода ролика на объекте может быть разным (+ - 10 минут). Зависит от загрузки эфира.</h2>
+    [data]
+</body>
+</html>

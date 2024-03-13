@@ -1,0 +1,50 @@
+{
+  "executable": "MarketRadio.Player",
+  "splashscreen": {
+    "imageFile": ""
+  },
+  "name": "player-client",
+  "author": "Маркет-Радио",
+  "singleInstance": true,
+  "environment": "Production",
+  "description": "Клиент Маркет-Радио",
+  "electronPort": 48668,
+  "build": {
+    "appId": "kz.marketradio.player",
+    "productName": "Плеер Маркет-Радио",
+    "copyright": "Copyright © 2021",
+    "buildVersion": "2.7.11",
+    "compression": "maximum",
+    "win": {
+      "icon": "../../../icon.ico"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://publisher.909.kz/client/"
+      }
+    ],
+    "directories": {
+      "output": "../../../bin/Desktop"
+    },
+    "extraResources": [
+      {
+        "from": "./bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "files": [
+      {
+        "from": "./ElectronHostHook/node_modules",
+        "to": "ElectronHostHook/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      "**/*"
+    ]
+  }
+}

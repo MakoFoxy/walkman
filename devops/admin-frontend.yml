@@ -1,0 +1,102 @@
+build-admin-frontend-master:
+    image: node:16.13.0-bullseye-slim
+    only:
+      refs:
+        - master
+      changes:
+        - Frontend/**/*
+        - devops/admin-frontend.yml
+    before_script:
+      - apt-get update -qq
+      - apt-get install -qq git curl
+      - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.22.4
+      - export PATH="$HOME/.yarn/bin:$PATH"
+      - yarn config set cache-folder $(pwd)/.yarn-cache
+      - yarn global add @vue/cli
+    script:
+      - cd Frontend
+      - yarn
+      - yarn build
+    artifacts:
+      paths:
+        - ./Frontend/dist/**/*
+    stage: build
+    tags:
+      - docker
+
+build-admin-frontend-dev:
+    image: node:16.13.0-bullseye-slim
+    except:
+      refs:
+        - master
+    only:
+      changes:
+        - Frontend/**/*
+        - devops/admin-frontend.yml
+    before_script:
+      - apt-get update -qq
+      - apt-get install -qq git curl
+      - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.22.4
+      - export PATH="$HOME/.yarn/bin:$PATH"
+      - yarn config set cache-folder $(pwd)/.yarn-cache
+      - yarn global add @vue/cli
+    script:
+      - cd Frontend
+      - yarn
+      - yarn build
+    artifacts:
+      paths:
+        - ./Frontend/dist/**/*
+    stage: build
+    tags:
+      - docker
+
+
+#Deploy
+
+deploy-admin-frontend-dev:
+    image: debian:bullseye-slim
+    except:
+      refs:
+        - master
+    only:
+      changes:
+        - Frontend/**/*
+        - devops/admin-frontend.yml
+    stage: deploy
+    before_script:
+      - apt-get update -qq
+      - apt-get install -qq git curl rsync
+      # Setup SSH deploy keys
+      - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+      - eval $(ssh-agent -s)
+      - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 --decode)
+      - mkdir -p ~/.ssh
+      - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    script:
+        - rsync -arv --delete --progress ./Frontend/dist/ root@${TEST_IP_ADDRESS}:/var/www/dev.909.kz/html
+    tags:
+      - docker
+
+deploy-admin-frontend-master:
+    image: debian:bullseye-slim
+    only:
+      refs:
+        - master
+      changes:
+        - Frontend/**/*
+        - devops/admin-frontend.yml
+    stage: deploy
+    before_script:
+      - apt-get update -qq
+      - apt-get install -qq git curl rsync
+      # Setup SSH deploy keys
+      - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+      - eval $(ssh-agent -s)
+      - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 --decode)
+      - mkdir -p ~/.ssh
+      - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    script:
+        - rsync -arv --delete --progress ./Frontend/dist/ root@${IP_ADDRESS}:/docker_volumes/player/frontend/html
+    tags:
+      - docker

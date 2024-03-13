@@ -1,0 +1,33 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER $APP_UID
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["Player.WebApi/Player.WebApi.csproj", "Player.WebApi/"]
+COPY ["Player.DataAccess/Player.DataAccess.csproj", "Player.DataAccess/"]
+COPY ["Player.Helpers/Player.Helpers.csproj", "Player.Helpers/"]
+COPY ["Player.Domain/Player.Domain.csproj", "Player.Domain/"]
+COPY ["Player.DTOs/Player.DTOs.csproj", "Player.DTOs/"]
+COPY ["Player.BusinessLogic/Player.BusinessLogic.csproj", "Player.BusinessLogic/"]
+COPY ["Player.Services/Player.Services.csproj", "Player.Services/"]
+COPY ["Player.Services.Abstractions/Player.Services.Abstractions.csproj", "Player.Services.Abstractions/"]
+COPY ["Player.Helpers.App/Player.Helpers.App.csproj", "Player.Helpers.App/"]
+COPY ["Player.AuthorizationLogic/Player.AuthorizationLogic.csproj", "Player.AuthorizationLogic/"]
+COPY ["Player.ClientIntegration/Player.ClientIntegration.csproj", "Player.ClientIntegration/"]
+RUN dotnet restore "Player.WebApi/Player.WebApi.csproj"
+COPY . .
+WORKDIR "/src/Player.WebApi"
+RUN dotnet build "Player.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "Player.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "Player.WebApi.dll"]

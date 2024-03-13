@@ -1,0 +1,30 @@
+#!/bin/sh
+
+manifestFilePath="./client/MarketRadio.Player/electron.manifest.json"
+
+changedFiles=$(git diff --cached --name-only --diff-filter=ACM -z | xargs -0)
+echo "$changedFiles"
+
+if [[ ! $changedFiles =~ "client/" ]]; then
+    exit 0
+fi
+
+manifest=$(cat "$manifestFilePath")
+buildVersion=$(echo $manifest | ~/scoop/apps/jq/current/jq.exe .build.buildVersion)
+#Удаляем ковычки
+buildVersion=${buildVersion:1:-1}
+pathVersion=${buildVersion##*.}
+#Обновляем патч версию
+((++pathVersion))
+newBuildVersion="\"${buildVersion%.*}.${pathVersion}\""
+newManifest=$(~/scoop/apps/jq/current/jq.exe ".build.buildVersion = ${newBuildVersion}" <<<"$manifest")
+
+echo "$newManifest" > "$manifestFilePath"
+
+git add "$manifestFilePath"
+
+# Берем мажор и минор
+# echo ${foo%.*}
+
+# Берем только мажор
+# echo ${foo%%.*}

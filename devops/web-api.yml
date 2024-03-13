@@ -1,0 +1,65 @@
+build-web-api-master:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  only:
+    refs:
+      - master
+    changes:
+      - Backend/**/*
+      - devops/docker-images/Dockerfile-web-api
+      - devops/docker-images/Dockerfile-web-api-base
+      - devops/web-api.yml
+      - devops/web-api-base.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}:latest -f ./devops/docker-images/Dockerfile-web-api ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}:latest
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build
+  tags:
+    - docker
+    - walkman
+
+build-web-api-dev:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  except:
+    refs:
+      - master
+  only:
+    changes:
+      - Backend/**/*
+      - devops/docker-images/Dockerfile-web-api
+      - devops/docker-images/Dockerfile-web-api-base
+      - devops/web-api.yml
+      - devops/web-api-base.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}:dev -f ./devops/docker-images/Dockerfile-web-api ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}:dev
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build
+  tags:
+    - docker
+    - walkman
+

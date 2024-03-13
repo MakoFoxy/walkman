@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Player.PlaylistGenerator": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

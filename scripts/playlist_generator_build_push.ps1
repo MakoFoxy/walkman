@@ -1,0 +1,2 @@
+docker build -t registry.gitlab.com/salad-crew/walkman/playlist-generator -f ../Backend/Player.PlaylistGenerator/Dockerfile ../Backend/
+docker push registry.gitlab.com/salad-crew/walkman/playlist-generator

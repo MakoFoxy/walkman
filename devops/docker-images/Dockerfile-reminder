@@ -1,0 +1,28 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER $APP_UID
+WORKDIR /app
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["Player.Reminder/Player.Reminder.csproj", "Player.Reminder/"]
+COPY ["Player.DataAccess/Player.DataAccess.csproj", "Player.DataAccess/"]
+COPY ["Player.Domain/Player.Domain.csproj", "Player.Domain/"]
+COPY ["Player.Helpers.App/Player.Helpers.App.csproj", "Player.Helpers.App/"]
+COPY ["Player.Services.Abstractions/Player.Services.Abstractions.csproj", "Player.Services.Abstractions/"]
+COPY ["Player.Services/Player.Services.csproj", "Player.Services/"]
+COPY ["Player.Helpers/Player.Helpers.csproj", "Player.Helpers/"]
+COPY ["Player.DTOs/Player.DTOs.csproj", "Player.DTOs/"]
+RUN dotnet restore "Player.Reminder/Player.Reminder.csproj"
+COPY . .
+WORKDIR "/src/Player.Reminder"
+RUN dotnet build "Player.Reminder.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "Player.Reminder.csproj" -c $BUILD_CONFIGURATION -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Player.Reminder.dll"]

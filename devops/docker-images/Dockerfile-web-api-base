@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+
+RUN echo "ipv6" >> /etc/modules 
+RUN apt-get update
+RUN apt-get -y install ffmpeg libgdiplus libc6-dev
+COPY ./Utils/linux/mp3gain /app/utils/mp3gain
+RUN ["chmod", "+x", "/app/utils/mp3gain"]

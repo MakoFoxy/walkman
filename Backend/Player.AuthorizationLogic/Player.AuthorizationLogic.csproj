@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.8" />
+      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="6.0.8" />
+      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.22.1" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.22.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Player.DataAccess\Player.DataAccess.csproj" />
+    </ItemGroup>
+
+</Project>

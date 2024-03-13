@@ -1,0 +1,17 @@
+stages:
+  - build-base
+  - build
+  - deploy
+
+include:
+  - local: /devops/client-base.yml
+  - local: /devops/client.yml
+  - local: /devops/selections-loader.yml
+  - local: /devops/web-api-base.yml
+  - local: /devops/web-api.yml
+  - local: /devops/playlist-generator.yml
+  - local: /devops/publisher.yml
+  - local: /devops/archive-worker.yml
+  - local: /devops/report-sender.yml
+  - local: /devops/reminder.yml
+  - local: /devops/admin-frontend.yml

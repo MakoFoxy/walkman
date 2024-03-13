@@ -1,0 +1,41 @@
+{
+  "executable": "MarketRadio.SelectionsLoader",
+  "splashscreen": {
+    "imageFile": ""
+  },
+  "name": "selections-loader",
+  "author": "Маркет-Радио",
+  "singleInstance": true,
+  "environment": "Production",
+  "build": {
+    "appId": "com.marketradio.selectionsloader",
+    "productName": "Загрузчик подборок",
+    "copyright": "Copyright © 2021",
+    "buildVersion": "1.0.6",
+    "compression": "maximum",
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://publisher.909.kz/selections-loader/"
+      }
+    ],
+    "directories": {
+      "output": "../../../bin/Desktop"
+    },
+    "extraResources": [
+      {
+        "from": "./bin",
+        "to": "bin",
+        "filter": [ "**/*" ]
+      }
+    ],
+    "files": [
+      {
+        "from": "./ElectronHostHook/node_modules",
+        "to": "ElectronHostHook/node_modules",
+        "filter": [ "**/*" ]
+      },
+      "**/*"
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+build-client-master:
+    image: registry.gitlab.com/salad-crew/walkman/client-base-image:latest
+    only:
+      refs:
+        - master
+      changes:
+        - client/**/*
+        - devops/client.yml
+        - nukebuild/**/*
+    script:
+      - chmod +x ./nukebuild/build.sh
+      - export NODE_OPTIONS=--openssl-legacy-provider
+      - ./nukebuild/build.sh CompileClient --solution ./client/MarketRadio.Player.sln
+    artifacts:
+      paths:
+        - ./client/MarketRadio.Player/bin/Desktop/*.*
+    stage: build
+    tags:
+      - docker
+
+build-client-dev:
+    image: registry.gitlab.com/salad-crew/walkman/client-base-image:dev
+    except:
+      refs:
+        - master
+    only:
+      changes:
+        - client/**/*
+        - devops/client.yml
+        - nukebuild/**/*
+    script:
+      - chmod +x ./nukebuild/build.sh
+      - export NODE_OPTIONS=--openssl-legacy-provider
+      - node --version
+      - ./nukebuild/build.sh CompileClient --solution ./client/MarketRadio.Player.sln
+    artifacts:
+      paths:
+        - ./client/MarketRadio.Player/bin/Desktop/*.*
+        - ./client/MarketRadio.Player/bin/Desktop/Плеер Маркет-Радио Setup*.exe*
+    stage: build
+    tags:
+      - docker
+
+#Deploy
+
+deploy-client:
+    image: debian:bullseye-slim
+    only:
+      changes:
+        - client/**/*
+        - devops/client.yml
+    stage: deploy
+    before_script:
+      - apt-get update -qq
+      - apt-get install -qq git curl
+      # Setup SSH deploy keys
+      - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+      - eval $(ssh-agent -s)
+      - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 --decode)
+      - mkdir -p ~/.ssh
+      - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    script:
+        - scp -r ./client/MarketRadio.Player/bin/Desktop/* root@${IP_ADDRESS}:/docker_volumes/player/client
+    tags:
+      - docker

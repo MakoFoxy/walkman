@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketRadio.Player", "MarketRadio.Player\MarketRadio.Player.csproj", "{9414B9F2-C9B6-4FBC-A912-B1E63114B54E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketRadio.Player.DataAccess", "MarketRadio.Player.DataAccess\MarketRadio.Player.DataAccess.csproj", "{E7090D93-5AAA-4F7C-BAAE-E61F8A406E92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketRadio.Player.Helpers", "MarketRadio.Player.Helpers\MarketRadio.Player.Helpers.csproj", "{E0F92781-F13A-4F39-8717-7F902FD73DB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Player.ClientIntegration", "..\Backend\Player.ClientIntegration\Player.ClientIntegration.csproj", "{54167EC8-02A9-4736-AA7A-5B58CDAC7FBE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9414B9F2-C9B6-4FBC-A912-B1E63114B54E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9414B9F2-C9B6-4FBC-A912-B1E63114B54E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9414B9F2-C9B6-4FBC-A912-B1E63114B54E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9414B9F2-C9B6-4FBC-A912-B1E63114B54E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7090D93-5AAA-4F7C-BAAE-E61F8A406E92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7090D93-5AAA-4F7C-BAAE-E61F8A406E92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7090D93-5AAA-4F7C-BAAE-E61F8A406E92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7090D93-5AAA-4F7C-BAAE-E61F8A406E92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0F92781-F13A-4F39-8717-7F902FD73DB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0F92781-F13A-4F39-8717-7F902FD73DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0F92781-F13A-4F39-8717-7F902FD73DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0F92781-F13A-4F39-8717-7F902FD73DB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54167EC8-02A9-4736-AA7A-5B58CDAC7FBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54167EC8-02A9-4736-AA7A-5B58CDAC7FBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54167EC8-02A9-4736-AA7A-5B58CDAC7FBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54167EC8-02A9-4736-AA7A-5B58CDAC7FBE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,25 @@
+.walkman-table td {
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.walkman-table {
+    background-color: white;
+}
+
+.walkman-table > div > table > tbody {
+    display: block;
+    height: 70vh;
+    overflow: auto;
+}
+
+.walkman-table > div > table > thead {
+    display: block;
+    overflow: auto;
+}
+
+.walkman-table > div > table >thead, .walkman-table > div > table > tbody tr {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+}

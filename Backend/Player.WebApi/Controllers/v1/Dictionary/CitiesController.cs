@@ -1,0 +1,29 @@
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Player.BusinessLogic.Features.Cities;
+using Player.Domain;
+
+namespace Player.WebApi.Controllers.v1.Dictionary
+{
+    [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    public class CitiesController : ControllerBase
+    {
+        private readonly IMediator _mediator;
+
+        public CitiesController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        [HttpGet]
+        [Authorize(Policy = Permission.ReadAllCities, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<List<List.CityModel>> Get(CancellationToken cancellationToken) => await _mediator.Send(new List.Query(), cancellationToken);
+    }
+}

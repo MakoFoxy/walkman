@@ -1,0 +1,64 @@
+build-selections-loader-master:
+  image: registry.gitlab.com/salad-crew/walkman/client-base-image:latest
+  only:
+    refs:
+      - master
+    changes:
+      - selections-loader/**/*
+      - devops/selections-loader.yml
+      - nukebuild/**/*
+  script:
+    - chmod +x ./nukebuild/build.sh
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    - ./nukebuild/build.sh CompileSelectionsLoader --solution ./selections-loader/backend/MarketRadio.SelectionsLoader.sln
+  artifacts:
+    paths:
+      - ./selections-loader/backend/MarketRadio.SelectionsLoader/bin/Desktop/*.*
+  stage: build
+  tags:
+    - docker
+
+build-selections-loader-dev:
+  image: registry.gitlab.com/salad-crew/walkman/client-base-image:dev
+  except:
+    refs:
+      - master
+  only:
+    changes:
+      - selections-loader/**/*
+      - devops/selections-loader.yml
+      - nukebuild/**/*
+  script:
+    - chmod +x ./nukebuild/build.sh
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    - ./nukebuild/build.sh CompileSelectionsLoader --solution ./selections-loader/backend/MarketRadio.SelectionsLoader.sln
+  artifacts:
+    paths:
+      - ./selections-loader/backend/MarketRadio.SelectionsLoader/bin/Desktop/*.*
+      - ./selections-loader/backend/MarketRadio.SelectionsLoader/bin/Desktop/Загрузчик подборок Setup*.exe*
+  stage: build
+  tags:
+    - docker
+
+#Deploy
+
+deploy-selections-loader:
+  image: debian:bullseye-slim
+  only:
+    changes:
+      - selections-loader/**/*
+      - devops/selections-loader.yml
+  stage: deploy
+  before_script:
+    - apt-get update -qq
+    - apt-get install -qq git curl
+    # Setup SSH deploy keys
+    - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 --decode)
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - scp -r ./selections-loader/backend/MarketRadio.SelectionsLoader/bin/Desktop/* root@${IP_ADDRESS}:/docker_volumes/player/selections-loader
+  tags:
+    - docker

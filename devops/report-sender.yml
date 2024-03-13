@@ -1,0 +1,60 @@
+build-report-sender-master:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  only:
+    refs:
+      - master
+    changes:
+      - Backend/**/*
+      - devops/docker-images/Dockerfile-report-sender
+      - devops/report-sender.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/report-sender:latest -f ./devops/docker-images/Dockerfile-report-sender ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}/report-sender:latest
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build
+  tags:
+    - docker
+    - walkman
+
+build-report-sender-dev:
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  except:
+    refs:
+      - master
+  only:
+    changes:
+      - Backend/**/*
+      - devops/docker-images/Dockerfile-report-sender
+      - devops/report-sender.yml
+  before_script:
+    - docker --version
+    - docker login registry.gitlab.com -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/report-sender:dev -f ./devops/docker-images/Dockerfile-report-sender ./Backend/
+    - docker push ${CI_REGISTRY_IMAGE}/report-sender:dev
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  stage: build
+  tags:
+    - docker
+    - walkman

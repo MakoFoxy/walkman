@@ -1,0 +1,114 @@
+version: '3.4'
+
+services:
+  webapi:
+    image: registry.gitlab.com/salad-crew/walkman:dev
+    restart: always
+    ports:
+      - "127.0.0.1:8082:80"
+    environment:
+      Player__WalkmanConnectionString: "Host=10.135.65.133;Port=5432;Database=walkman_db;Username=walkman_admin;Password=f#*z8V3s8R?NR+JV"
+      Player__FFmpegPath: ""
+      Player__Mp3GainPath: "/app/utils/mp3gain"
+      Player__SongsPath: "/app/songs"
+      Player__AdvertsPath: "/app/adverts"
+      Player__Telegram__Token: "810884084:AAEn7qwk9nqV7LW7ctR57xT5FvhrngKUBvU"
+      Player__Telegram__WebHookUrl: "https://909.kz/api/v1/selection-message"
+      Player__ClientPath: "/app/client"
+      Player__ApiEndpoints__PublisherUrl: "http://player.publisher:80"
+      Serilog__MinimumLevel__Default: "Warning"
+      Serilog__MinimumLevel__Override__Player: "Verbose"
+      Logging__MongoDbLogEndpoint: "mongodb://walkman:27.04.20_Market-Radio-nmjsdf0#_xcv@mongo:27017/admin"
+      TZ: "Asia/Bishkek"
+    networks:
+      - walkman-network
+    volumes:
+      - /docker_volumes/player/songs/:/app/songs
+      - /docker_volumes/player/adverts/:/app/adverts
+      - /docker_volumes/player/token:/app/tokens
+      - /docker_volumes/player/client:/app/client
+    depends_on:
+      - mongo
+
+  player.publisher:
+    image: registry.gitlab.com/salad-crew/walkman/publisher:dev
+    restart: always
+    ports:
+      - "127.0.0.1:8083:80"
+    environment:
+      Player__WalkmanConnectionString: "Host=10.135.65.133;Port=5432;Database=walkman_db;Username=walkman_admin;Password=f#*z8V3s8R?NR+JV"
+      Player__SongsPath: "/app/songs"
+      Player__AdvertsPath: "/app/adverts"
+      Player__ApiEndpoints__WebAppUrl: "http://webapi:80"
+      Serilog__MinimumLevel__Default: "Warning"
+      Serilog__MinimumLevel__Override__Player: "Verbose"
+      Serilog__MinimumLevel__Override__Player.BusinessLogic.Commands.SendPlaylistReportCommand: "Information"
+      Logging__MongoDbLogEndpoint: "mongodb://walkman:27.04.20_Market-Radio-nmjsdf0#_xcv@mongo:27017/admin"
+      Player__Telegram__Token: "810884084:AAEn7qwk9nqV7LW7ctR57xT5FvhrngKUBvU"
+      Player__Telegram__WebHookUrl: "https://909.kz/api/v1/selection-message"
+      TZ: "Asia/Bishkek"
+    networks:
+      - walkman-network
+    volumes:
+      - /docker_volumes/player/songs/:/app/songs
+      - /docker_volumes/player/adverts/:/app/adverts
+      
+  player.playlist-generator:
+    image: registry.gitlab.com/salad-crew/walkman/playlist-generator:dev
+    restart: always
+    environment:
+      Player__WalkmanConnectionString: "Host=10.135.65.133;Port=5432;Database=walkman_db;Username=walkman_admin;Password=f#*z8V3s8R?NR+JV"
+      Player__GenerationPeriodInMinutes: 5
+      Player__EmptyPlaylistGenerationTime: "13:00"
+      Serilog__MinimumLevel__Default: "Warning"
+      Serilog__MinimumLevel__Override__Player: "Information"
+      Logging__MongoDbLogEndpoint: "mongodb://walkman:27.04.20_Market-Radio-nmjsdf0#_xcv@mongo:27017/admin"
+      TZ: "Asia/Bishkek"
+    networks:
+      - walkman-network
+      
+  player.archive-worker:
+    image: registry.gitlab.com/salad-crew/walkman/archive-worker:dev
+    restart: always
+    environment:
+      Player__WalkmanConnectionString: "Host=10.135.65.133;Port=5432;Database=walkman_db;Username=walkman_admin;Password=f#*z8V3s8R?NR+JV"
+      Player__WakeUpTime: "23:50"
+      Serilog__MinimumLevel__Default: "Warning"
+      Serilog__MinimumLevel__Override__Player: "Verbose"
+      Logging__MongoDbLogEndpoint: "mongodb://walkman:27.04.20_Market-Radio-nmjsdf0#_xcv@mongo:27017/admin"
+      TZ: "Asia/Bishkek"
+    networks:
+      - walkman-network
+
+  player.report-sender:
+    image: registry.gitlab.com/salad-crew/walkman/report-sender:dev
+    restart: always
+    environment:
+      Player__WalkmanConnectionString: "Host=10.135.65.133;Port=5432;Database=walkman_db;Username=walkman_admin;Password=f#*z8V3s8R?NR+JV"
+      Player__Telegram__Token: "810884084:AAEn7qwk9nqV7LW7ctR57xT5FvhrngKUBvU"
+      Player__Telegram__WebHookUrl: "https://909.kz/api/v1/SelectionMessage"
+      Player__ReportTime: "10:00"
+      Serilog__MinimumLevel__Default: "Warning"
+      Serilog__MinimumLevel__Override__Player: "Verbose"
+      Logging__MongoDbLogEndpoint: "mongodb://walkman:27.04.20_Market-Radio-nmjsdf0#_xcv@mongo:27017/admin"
+      TZ: "Asia/Bishkek"
+    networks:
+      - walkman-network
+
+  mongo:
+    image: mongo:4
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: walkman
+      MONGO_INITDB_ROOT_PASSWORD: 27.04.20_Market-Radio-nmjsdf0#_xcv
+      MONGO_INITDB_DATABASE: logs
+      TZ: "Asia/Bishkek"
+    ports:
+      - "17079:27017"
+    volumes:
+      - /docker_volumes/player/mongodb/data:/data/db
+    networks:
+      - walkman-network
+networks:
+  walkman-network:
+    driver: bridge

@@ -1,0 +1,15 @@
+export const LOGIN = 'login'
+export const LOGOUT = 'logout'
+export const SET_USER_OBJECT_BY_INDEX = 'SET_USER_OBJECT_BY_INDEX'
+export const GET_PERMISSIONS = 'getPermissions';
+export const GET_USER_OBJECTS = 'getUserObjects';
+export const REGISTER_ERROR = 'registerError'
+export const INITIALIZE = 'initialize'
+export const GET_OBJECTS = 'getObjects'
+export const GET_ADVERTS = 'getAdverts'
+export const GET_ARCHIVED_ADVERTS = 'getArchivedAdverts'
+export const SEND_ADVERT_IN_ARCHIVE = 'sendAdvertInArchive'
+export const DELETE_ADVERT_FROM_ARCHIVE = 'deleteAdvertFromArchive'
+export const GET_MUSIC = 'getMusic'
+export const GET_CLIENTS = 'getClients'
+export const GET_MANAGERS = 'getManagers'

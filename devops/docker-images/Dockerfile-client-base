@@ -1,0 +1,11 @@
+FROM electronuserland/builder:18-wine-mono-11.23 AS base
+
+RUN echo "ipv6" >> /etc/modules
+RUN apt-get -y install wget
+RUN apt-get update
+RUN wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb
+RUN apt-get update; \
+  apt-get install -y apt-transport-https && \
+  apt-get update && \
+  apt-get install -y dotnet-sdk-8.0  dotnet-sdk-6.0

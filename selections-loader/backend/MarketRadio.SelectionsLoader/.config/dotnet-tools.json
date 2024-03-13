@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "mapster.tool": {
+      "version": "8.0.1",
+      "commands": [
+        "dotnet-mapster"
+      ]
+    },
+    "electronnet.cli": {
+      "version": "23.6.1",
+      "commands": [
+        "electronize"
+      ]
+    }
+  }
+}
