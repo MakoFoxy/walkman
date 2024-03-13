@@ -1,0 +1,69 @@
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.SignalR;
+using Player.BusinessLogic.Hubs;
+using Player.ClientIntegration;
+using Player.ClientIntegration.System;
+using Player.Services.Abstractions;
+
+namespace Player.BusinessLogic.Features.SoftwareClient
+{
+    public class DownloadLogs
+    {
+        public class Handler : IRequestHandler<Query, Response>
+        {
+            private readonly IHubContext<PlayerClientHub> _playerClientHub;
+            private readonly IUserManager _userManager;
+
+            public Handler(IHubContext<PlayerClientHub> playerClientHub, IUserManager userManager)
+            {
+                 _playerClientHub = playerClientHub;
+                 _userManager = userManager;
+            }
+
+            public async Task<Response> Handle(Query query, CancellationToken cancellationToken)
+            {
+                if (!PlayerClientHub.ConnectedClients.Any(cc => cc.Id == query.Id))
+                {
+                    return new Response
+                    {
+                        IsOnline = false,
+                        Message = "Object is offline",
+                    };
+                }
+
+                var currentUser = await _userManager.GetCurrentUser(cancellationToken);
+                await _playerClientHub.Clients.Group(query.Id.ToString()).SendAsync( OnlineEvents.DownloadLogs, new DownloadLogsRequest
+                {
+                    UserId = currentUser.Id,
+                    From = query.From,
+                    To = query.To,
+                    DbLogs = query.DbLogs, 
+                }, cancellationToken);
+                
+                return new Response
+                {
+                    IsOnline = true,
+                    Message = "Request has been sent",
+                };
+            }
+        }
+
+        public class Query : IRequest<Response>
+        {
+            public Guid Id { get; set; }
+            public DateTime From { get; set; }
+            public DateTime To { get; set; }
+            public bool DbLogs { get; set; }
+        }
+
+        public class Response
+        {
+            public bool IsOnline { get; set; }
+            public string Message { get; set; }
+        }
+    }
+}
