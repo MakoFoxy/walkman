@@ -24,7 +24,7 @@ namespace Player.BusinessLogic.Features.Selections
                 _context = context;
                 _mapper = mapper;
             }
-            
+
             public Task<SelectionModel> Handle(Query request, CancellationToken cancellationToken)
             {
                 return _context.Selections.Where(o => o.Id == request.Id)
@@ -43,25 +43,31 @@ namespace Player.BusinessLogic.Features.Selections
                         }).ToList(),
                     })
                     .SingleAsync(cancellationToken);
+
+                //Этот метод асинхронно извлекает из базы данных детальную информацию о подборке с указанным идентификатором. Возвращается объект SelectionModel, который включает в себя название подборки, даты начала и окончания, статус публичности и список треков, входящих в подборку.
             }
         }
 
         public class Query : IRequest<SelectionModel>
         {
             public Guid Id { get; set; }
+            //Query - это класс, представляющий запрос на получение деталей подборки. Он содержит идентификатор конкретной подборки, детали которой необходимо получить.
         }
-        
+
         public class SelectionModel : SimpleDto
         {
             public DateTimeOffset DateBegin { get; set; }
             public DateTimeOffset? DateEnd { get; set; }
             public bool IsPublic { get; set; }
             public List<TrackModel> Tracks { get; set; } = new();
+            //SelectionModel - это модель данных для представления деталей подборки. Она включает информацию о временных рамках, доступности подборки и списка треков. 
         }
 
-        public class TrackModel : SimpleDto
+        public class TrackModel : SimpleDto        
         {
             public double Length { get; set; }
+            //TrackModel используется для представления информации о каждом треке в подборке, включая длительность трека.
         }
     }
+    //Этот код позволяет пользователям системы получать детальную информацию о музыкальных подборках, включая состав треков, что может использоваться для различных целей, например, для отображения информации на интерфейсе пользователя или для дальнейшего анализа и обработки.
 }

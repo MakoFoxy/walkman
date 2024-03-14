@@ -20,6 +20,8 @@ namespace Player.BusinessLogic.Features.Users
             {
                 _context = context;
                 _tokenGenerator = tokenGenerator;
+                //Handler: Обработчик запроса авторизации, который реализует интерфейс IRequestHandler<Query, AuthorizeResult> из библиотеки MediatR. Обработчик использует контекст базы данных (PlayerContext) и генератор токенов (ITokenGenerator) для выполнения процедуры авторизации.
+
             }
 
             public async Task<AuthorizeResult> Handle(Query request, CancellationToken cancellationToken = default)
@@ -35,13 +37,18 @@ namespace Player.BusinessLogic.Features.Users
                     {
                         return new AuthorizeResult
                         {
-                            Token =_tokenGenerator.Generate(user),
+                            Token = _tokenGenerator.Generate(user),
                             IsSuccess = true
+                            //В случае, если пользователь не найден или данные не совпадают, возвращается результат авторизации с флагом IsSuccess равным false (в данной реализации, пустой объект AuthorizeResult), что означает неуспешную авторизацию.
                         };
                     }
                 }
-                
+
                 return new AuthorizeResult();
+
+                //                 По полученным email и паролю из запроса, обработчик ищет пользователя в базе данных.
+                // Если пользователь найден и его данные подтверждены (email и пароль совпадают), то проверяется, разрешен ли пользователю вход в систему (в данном случае, метод AllowToLogin всегда возвращает true, что означает, что вход разрешен всем пользователям, но этот механизм может быть изменен в соответствии с бизнес-требованиями).
+                // Если условия авторизации удовлетворены, для пользователя генерируется токен, который возвращается в результате.
             }
 
             //TODO Понять нужно ли? Вход идет с мобилки, веба и клиента

@@ -23,8 +23,9 @@ namespace Player.BusinessLogic.Features.Selections
                 _context = context;
                 _telegramMessageSender = telegramMessageSender;
                 _mapper = mapper;
+                //Конструктор класса Handler, принимает контекст базы данных, сервис для отправки сообщений в Telegram и маппер для преобразования объектов.
             }
-            
+
             public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
             {
                 var model = request.Model;
@@ -51,6 +52,17 @@ namespace Player.BusinessLogic.Features.Selections
 
                 await _context.SaveChangesAsync(cancellationToken);
                 return Unit.Value;
+
+                //                 Асинхронно обрабатывает команду на редактирование подборки. Метод загружает подборку из базы данных по ID, обновляет её поля в соответствии с данными из request.Model, очищает текущий список музыкальных треков и добавляет новые, указанные в модели команды. После изменений данные сохраняются в базе.
+                // Классы Command и UpdateSelectionModel:
+
+                //     Command - класс, представляющий собой команду, содержащую модель для обновления UpdateSelectionModel.
+                //     UpdateSelectionModel - модель данных, используемая для обновления информации о подборке. Содержит название, даты начала и окончания, статус публичности и список треков.
+
+                // Изменение подборки:
+
+                //     Поля Name, DateBegin, DateEnd и IsPublic подборки обновляются согласно данным из модели.
+                //     Список треков в подборке (MusicTracks) очищается и заново заполняется треками из команды. Для каждого трека создается связь с подборкой (MusicTrackSelection), где Index задаёт порядок трека в подборке.
             }
         }
 
@@ -59,4 +71,5 @@ namespace Player.BusinessLogic.Features.Selections
             public UpdateSelectionModel Model { get; set; }
         }
     }
+    //После выполнения метода Handle изменения подборки сохраняются в базе данных, и операция редактирования считается завершённой. Это позволяет пользователям системы обновлять существующие музыкальные подборки, меняя их состав и свойства.
 }

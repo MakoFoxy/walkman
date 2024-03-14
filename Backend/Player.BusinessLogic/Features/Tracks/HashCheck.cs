@@ -28,7 +28,7 @@ namespace Player.BusinessLogic.Features.Tracks
                     TrackType.Music => _context.MusicTracks.AsQueryable(),
                     _ => throw new ArgumentException(nameof(query.TrackType))
                 };
-                
+
                 var hash = await tracksQuery.Where(a => a.Id == query.TrackId)
                     .Select(a => a.Hash)
                     .SingleAsync(cancellationToken);
@@ -37,6 +37,8 @@ namespace Player.BusinessLogic.Features.Tracks
                 {
                     TrackIsCorrect = hash == query.Hash
                 };
+
+                //Метод принимает запрос Query и возвращает ответ Response. Внутри метода создается LINQ запрос к базе данных для выбора треков в зависимости от их типа (TrackType). Далее из этого набора выбирается трек с идентификатором TrackId, и для него извлекается хеш. Сравнивается хеш из базы данных с хешем, переданным в запросе (query.Hash). Возвращается ответ, содержащий результат сравнения хешей.
             }
         }
 
@@ -45,11 +47,14 @@ namespace Player.BusinessLogic.Features.Tracks
             public string TrackType { get; set; }
             public Guid TrackId { get; set; }
             public string Hash { get; set; }
+            //Представляет собой запрос на проверку хеша трека. Содержит тип трека (TrackType), идентификатор трека (TrackId) и хеш для проверки (Hash).
         }
 
         public class Response
         {
             public bool TrackIsCorrect { get; set; }
+            //Представляет ответ на запрос. Содержит булево значение TrackIsCorrect, которое указывает, совпадает ли хеш трека с переданным хешем.
         }
     }
+    //Этот функционал позволяет клиентской части приложения проверить, соответствует ли хеш трека, хранящегося на сервере, хешу, который имеется у клиента. Это может быть использовано для валидации целостности файлов перед проигрыванием или скачиванием.
 }

@@ -22,7 +22,7 @@ namespace Player.BusinessLogic.Features.Selections
             private readonly IUserManager _userManager;
 
             public Handler(
-                PlayerContext context, 
+                PlayerContext context,
                 IMapper mapper,
                 ITelegramMessageSender telegramMessageSender,
                 IUserManager userManager)
@@ -32,7 +32,7 @@ namespace Player.BusinessLogic.Features.Selections
                 _telegramMessageSender = telegramMessageSender;
                 _userManager = userManager;
             }
-            
+
             public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
             {
                 //TODO Вынести в валидацию
@@ -40,15 +40,15 @@ namespace Player.BusinessLogic.Features.Selections
                 {
                     throw new Exception("Selection exists");
                 }
-                
+
                 var user = await _userManager.GetCurrentUser(cancellationToken);
 
                 var organization = await _context.Organizations
                     .Where(o => o.Clients.Select(c => c.User).Contains(user))
                     .SingleOrDefaultAsync(cancellationToken);
-                
+
                 var model = request.Model;
-                
+
                 var selection = new Selection
                 {
                     Name = model.Name,
@@ -66,7 +66,7 @@ namespace Player.BusinessLogic.Features.Selections
                         MusicTrackId = model.Tracks[i],
                         Selection = selection,
                     };
-                
+
                     selection.MusicTracks.Add(musicTrackSelection);
                 }
 
@@ -82,7 +82,18 @@ namespace Player.BusinessLogic.Features.Selections
                 _context.Selections.Add(selection);
                 await _context.SaveChangesAsync(cancellationToken);
                 return Unit.Value;
+                //Этот метод асинхронно обрабатывает команду на создание новой подборки. Сначала происходит проверка на существование подборки с таким же именем. Затем определяется организация текущего пользователя. Далее создается новый объект Selection с информацией из request.Model, включая название подборки, даты начала и окончания, принадлежность к организации и публичный статус. После этого добавляются музыкальные треки, указанные в команде, и связь с объектом, если таковая указана. В конце подборка добавляется в базу данных, и изменения сохраняются.
             }
+
+            //             Особенности реализации:
+
+            //     Перед созданием новой подборки происходит проверка на её уникальность по имени в рамках системы.
+            //     Создается связь подборки с организацией текущего пользователя.
+            //     В подборку добавляются музыкальные треки с сохранением их порядка в подборке.
+            //     Если в команде указан объект, с которым должна быть связана подборка, создается соответствующая связь.
+            //     Предполагается, что метод может быть расширен для отправки уведомлений через Telegram при успешном создании подборки, хотя в текущем коде это не реализовано.
+
+            // Код обеспечивает возможность создания подборок музыкальных треков, которые могут использоваться в различных  объектах системы, например, для воспроизведения в определенных местах или на мероприятиях.
         }
 
         public class Command : IRequest<Unit>

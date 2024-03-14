@@ -23,13 +23,14 @@ namespace Player.BusinessLogic.Features.Selections
             private readonly IMapper _mapper;
             private readonly IUserManager _userManager;
 
-            public Handler(PlayerContext context, 
+            public Handler(PlayerContext context,
                 IMapper mapper,
                 IUserManager userManager)
             {
                 _context = context;
                 _mapper = mapper;
                 _userManager = userManager;
+                //Handler - класс обработчика, который реализует интерфейс IRequestHandler для обработки запроса Query и возврата результата SelectionFilterResult. В конструкторе класса используются контекст базы данных PlayerContext, маппер IMapper и менеджер пользователей IUserManager.
             }
 
             public async Task<SelectionFilterResult> Handle(Query request,
@@ -43,7 +44,7 @@ namespace Player.BusinessLogic.Features.Selections
                     var organization = await _userManager.GetUserOrganization(cancellationToken);
                     query = query.Where(s => s.Organization == organization || s.IsPublic);
                 }
-                
+
                 var result = new SelectionFilterResult
                 {
                     Page = request.Filter?.Page,
@@ -55,7 +56,7 @@ namespace Player.BusinessLogic.Features.Selections
                     if (request.Filter.Actual.Value)
                     {
                         var now = DateTimeOffset.Now;
-                        query = query.Where(s => s.DateBegin <=  now && (s.DateEnd == null || s.DateEnd >= now));
+                        query = query.Where(s => s.DateBegin <= now && (s.DateEnd == null || s.DateEnd >= now));
                     }
                 }
 
@@ -76,6 +77,16 @@ namespace Player.BusinessLogic.Features.Selections
                 result.TotalItems = await query.CountAsync(cancellationToken);
 
                 return result;
+
+                //                 Этот асинхронный метод обрабатывает запрос на получение списка подборок. Он фильтрует подборки в зависимости от разрешений текущего пользователя, даты актуальности, текста поиска и ID объекта. Затем использует автомаппинг для преобразования результатов запроса в список моделей SelectionListModel и рассчитывает пагинацию.
+                // Фильтрация и пагинация:
+
+                // В зависимости от разрешений пользователя, даты, текста поиска и объекта формируется запрос к базе данных. Результат запроса затем пагинируется и преобразуется в список моделей подборок.
+                // Модели:
+
+                //     SelectionListModel - модель для представления музыкальной подборки в списке.
+                //     SelectionFilterModel - модель фильтрации подборок, содержит критерии, по которым выполняется поиск и фильтрация подборок.
+                //     SelectionFilterResult - результат выполнения запроса, содержит список подборок и информацию для пагинации.
             }
         }
 
@@ -93,10 +104,12 @@ namespace Player.BusinessLogic.Features.Selections
         public class Query : IRequest<SelectionFilterResult>
         {
             public SelectionFilterModel Filter { get; set; }
+            //Класс запроса, который содержит модель фильтра SelectionFilterModel для применения фильтрации к списку подборок.
         }
 
         public class SelectionFilterResult : BaseFilterResult<SelectionListModel>
         {
         }
     }
+    // Этот код обеспечивает получение фильтрованного и пагинированного списка музыкальных подборок, что может быть использовано для отображения на пользовательском интерфейсе или других частях системы. Пользователи могут искать подборки по различным критериям, включая актуальность, название и привязку к определенному объекту.
 }
