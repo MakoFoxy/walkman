@@ -20,6 +20,7 @@ namespace Player.BusinessLogic.Features.Playlists
                 _context = context;
                 _logger = logger;
                 //Конструктор принимает две зависимости: контекст данных и логгер. Контекст данных используется для взаимодействия с базой данных, а логгер — для регистрации информации о процессе выполнения.
+
             }
 
             public async Task<Response> Handle(Command command, CancellationToken cancellationToken)
@@ -63,10 +64,11 @@ namespace Player.BusinessLogic.Features.Playlists
             public DateTime End { get; set; }
         }
 
-        public class Responsez
+        public class Response
         {
             public Guid ResponseId { get; set; }
         }
         //Таким образом, код обеспечивает возможность отслеживания и анализа использования рекламных блоков в системе, сохраняя информацию о каждом показе рекламы.
+
     }
 }

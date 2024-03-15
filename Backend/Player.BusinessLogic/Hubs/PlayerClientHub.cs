@@ -17,7 +17,7 @@ namespace Player.BusinessLogic.Hubs
 {
     public class PlayerClientHub : Hub // Класс, производный от Hub, который предоставляет функционал SignalR.
     //Hub в контексте SignalR — это основной компонент, который используется для управления коммуникацией между сервером и клиентами в реальном времени. 
-    {
+    {        
         // Зависимости, инжектируемые через конструктор.
         private readonly PlayerContext _context; // Контекст для доступа к базе данных.
         private readonly ITelegramMessageSender _telegramMessageSender; // Сервис для отправки сообщений в Telegram.
