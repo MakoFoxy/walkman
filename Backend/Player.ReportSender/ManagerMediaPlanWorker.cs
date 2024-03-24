@@ -31,6 +31,7 @@ namespace Player.ReportSender
             _serviceProvider = serviceProvider;
             _reportGenerator = reportGenerator;
             _configuration = configuration;
+            //Принимает логгер, поставщика услуг, генератор отчетов и конфигурацию через dependency injection. Эти зависимости сохраняются в приватных полях класса для дальнейшего использования.
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -40,6 +41,7 @@ namespace Player.ReportSender
                 var timeLeft =
                     DateTime.Today.Add(TimeSpan.Parse(_configuration.GetValue<string>("Player:ReportTime"))) -
                     DateTime.Now;
+                //Рассчитывается время до следующего запланированного времени создания отчета.
 
                 if (timeLeft < TimeSpan.Zero)
                 {
@@ -51,9 +53,10 @@ namespace Player.ReportSender
                 _logger.LogInformation("Worker wake up at {Time}", nextWakeUpTime);
                 await Task.Delay(timeLeft, stoppingToken);
                 _logger.LogInformation("Worker woke up");
-
+                //Ожидается это время.
                 try
                 {
+                    //Вызывается метод DoWork, где выполняется основная логика.
                     await DoWork(stoppingToken);
                 }
                 catch (Exception e)
@@ -66,10 +69,9 @@ namespace Player.ReportSender
 
         private async Task DoWork(CancellationToken stoppingToken)
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = _serviceProvider.CreateScope(); //Создается новый скоуп зависимостей.
             await using var context = scope.ServiceProvider.GetRequiredService<PlayerContext>();
-            var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
-
+            var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>(); // Загружаются все менеджеры, имеющие Telegram ID, и связанные с ними объекты.
             var users = await context.Managers
                 .Include(m => m.User.Objects)
                 .ThenInclude(o => o.Object)
@@ -80,7 +82,7 @@ namespace Player.ReportSender
 
             var yesterday = DateTime.Today.AddDays(-1);
 
-            var adHistories = await context.AdHistories
+            var adHistories = await context.AdHistories //Загружается история рекламных объявлений для всех объектов за вчерашний день.
                 .Include(ah => ah.Advert)
                 .Where(ah => allObjects.Contains(ah.Object) && ah.End.Date == yesterday)
                 .ToListAsync(stoppingToken);
@@ -93,18 +95,20 @@ namespace Player.ReportSender
                     try
                     {
                         var histories = adHistories.Where(ah => ah.Object == o).ToList();
-
+                        //Фильтруются истории рекламных объявлений, связанные с текущим объектом.
                         var tracks = new Tracks();
                         tracks.AddAdverts(histories);
 
                         if (tracks.Adverts.Count == 0)
                         {
+                            //Если объявлений нет, логируется соответствующее сообщение и пропускается отправка отчета по этому объекту.
                             _logger.LogInformation("Sending mediaplan to manager {ManagerId} skipped in object {ObjectId}", manager.Id, o.Id);
                             continue;
                         }
-                        
+
                         var generatorResult = await _reportGenerator.Generate(new AdminMediaPlanPdfReportModel
                         {
+                            //Если объявления есть, генерируется отчет, и он отправляется менеджеру через Telegram.
                             Object = new Services.Report.Abstractions.Object
                             {
                                 Name = o.Name,
@@ -127,6 +131,10 @@ namespace Player.ReportSender
                     {
                         _logger.LogError(e, "Error with {UserId} on {ObjectId}", manager.User.Id, o.Id);
                     }
+                    //    Код предполагает, что отчеты создаются за вчерашний день.
+                    // Используется интерфейс IReportGenerator для генерации отчетов. Это абстракция, позволяющая генерировать отчеты различных типов.
+                    // Отправка отчетов в Telegram осуществляется через ITelegramMessageSender. Это позволяет менеджерам получать актуальную информацию прямо в мессенджер.
+                    // Используется асинхронное программирование для работы с базой данных и отправки сообщений без блокировки основного потока.
                 }
             }
         }

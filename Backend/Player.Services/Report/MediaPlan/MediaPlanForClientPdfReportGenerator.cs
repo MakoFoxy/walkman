@@ -10,41 +10,49 @@ namespace Player.Services.Report.MediaPlan
 {
     public class MediaPlanForClientPdfReportGenerator : BaseReportGenerator<ClientMediaPlanPdfReportModel>
     {
-        private readonly IGeneratePdf _generatePdf;
-        private string _printImgBase64;
-        
-        public override ReportType ReportType => ReportType.Pdf;
-        
-        public MediaPlanForClientPdfReportGenerator(IGeneratePdf generatePdf)
+        private readonly IGeneratePdf _generatePdf; // Сервис для создания PDF.
+        private string _printImgBase64; // Базовое представление изображения для печати в base64.
+
+        public override ReportType ReportType => ReportType.Pdf; // Тип отчета (PDF).
+
+        public MediaPlanForClientPdfReportGenerator(IGeneratePdf generatePdf) // Конструктор, получающий сервис генерации PDF.
         {
             _generatePdf = generatePdf;
         }
-        
-        protected override async Task<string> LoadTemplate(ClientMediaPlanPdfReportModel model)
+
+        protected override async Task<string> LoadTemplate(ClientMediaPlanPdfReportModel model) // Загрузка HTML-шаблона отчета.
         {
-            var bytes = await File.ReadAllBytesAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, "report-templates/print.png"));
-            _printImgBase64 = Convert.ToBase64String(bytes);
-            using var reader = File.OpenText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "report-templates/client-media-plan-template.html"));
-            return await reader.ReadToEndAsync();
+            var bytes = await File.ReadAllBytesAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, "report-templates/print.png")); // Чтение файла изображения.
+            _printImgBase64 = Convert.ToBase64String(bytes); // Преобразование изображения в строку base64.
+            using var reader = File.OpenText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "report-templates/client-media-plan-template.html")); // Чтение HTML-шаблона.
+            return await reader.ReadToEndAsync(); // Возврат содержимого файла.
         }
 
-        protected override Task<byte[]> GenerateAndInsertData(ClientMediaPlanPdfReportModel model)
+
+        protected override Task<byte[]> GenerateAndInsertData(ClientMediaPlanPdfReportModel model) // Генерация данных и вставка их в шаблон.
         {
             Content = Content.Replace("{ObjectNames}", GetObjectNames(model))
-                .Replace("{AdvertNames}", GetAdvertNames(model))
-                .Replace("{CompanyPeriod}", GetCompanyPeriod(model));
+                             .Replace("{AdvertNames}", GetAdvertNames(model))
+                             .Replace("{CompanyPeriod}", GetCompanyPeriod(model)); // Замена плейсхолдеров на реальные данные.
 
-            var html = Content.Replace("[body]", BuildBody(model));
-            return Task.FromResult(_generatePdf.GetPDF(html));
+            var html = Content.Replace("[body]", BuildBody(model)); // Вставка тела отчета в HTML.
+            return Task.FromResult(_generatePdf.GetPDF(html)); // Возврат сгенерированного PDF.
         }
+
+        // Методы получения различных частей отчета (названия объектов, названия реклам, период проведения кампании и т.д.).
+        // Генерация имени отчета.
+        // Дополнительные действия после генерации отчета (здесь ничего не делается, возвращает Task.CompletedTask).
+
 
         private static string GetObjectNames(ClientMediaPlanPdfReportModel model)
         {
+            // Возвращает строку, содержащую названия объектов, разделенные переносами строк.
             return string.Join(NewLine, model.ObjectHistoryModels.Select(o => $"{o.Object.City.Name} {o.Object.Name}").ToArray());
         }
 
         private string GetAdvertNames(ClientMediaPlanPdfReportModel model)
         {
+            // Возвращает строку, содержащую названия рекламных объявлений, разделенные переносами строк, уникальные для каждого объекта.
             return string.Join(NewLine,
                 model.ObjectHistoryModels.SelectMany(o => o.History.Select(h => h.Advert))
                     .DistinctBy(a => a.Id)
@@ -54,6 +62,7 @@ namespace Player.Services.Report.MediaPlan
 
         private string GetCompanyPeriod(ClientMediaPlanPdfReportModel model)
         {
+            // Возвращает периоды действия реклам для каждого объявления или сообщение, если объявление вне периода.
             var lifeTimes = model.ObjectHistoryModels.SelectMany(o => o.History.Select(h => h.Advert))
                 .DistinctBy(a => a.Id)
                 .Select(a =>
@@ -69,37 +78,45 @@ namespace Player.Services.Report.MediaPlan
 
         protected override Task<string> GetReportName(ClientMediaPlanPdfReportModel model)
         {
+            // Возвращает имя отчета, основанное на имени клиента и дате.
             return Task.FromResult($"Отчет для {model.Client.Name} за {model.Date:dd.MM.yyyy}");
         }
 
         protected override Task AfterGenerate(ClientMediaPlanPdfReportModel model, GeneratorResult result)
         {
+            // Пустой метод, вызываемый после генерации отчета. Можно использовать для выполнения дополнительных действий.
             return Task.CompletedTask;
         }
 
         private string BuildBody(ClientMediaPlanPdfReportModel model)
         {
+            // Строит HTML-тело отчета, создавая таблицы для каждого объекта с историей рекламных показов.
             var body = new StringBuilder();
 
             foreach (var historyModel in model.ObjectHistoryModels)
             {
-                var rows = new StringBuilder();
+                var rows = new StringBuilder(); //Для каждого объекта (historyModel) в модели отчета создается новый набор строк (rows).
                 var i = 1;
 
-                var orderedHistory = historyModel.History.DistinctBy(hm => new {hm.AdvertId, hm.Start})
+                var orderedHistory = historyModel.History.DistinctBy(hm => new { hm.AdvertId, hm.Start })
                     .OrderBy(hm => hm.Start)
                     .ToList();
-                
-                foreach (var adHistory in orderedHistory)
+
+                foreach (var adHistory in orderedHistory) //История рекламных показов упорядочивается по времени начала и делается уникальной по ID рекламы и времени начала.
                 {
                     var repeatCount = orderedHistory.Take(i).Count(h => h.AdvertId == adHistory.AdvertId);
-                    
+
                     rows.Append(string.Format(Row,
                         i,
                         repeatCount,
                         $"{adHistory.Start.TimeOfDay:hh\\:mm\\:ss} - {adHistory.End.TimeOfDay:hh\\:mm\\:ss}",
                         adHistory.Advert.Name));
                     i++;
+                    //                 Генерация строк таблицы:
+
+                    // Для каждой уникальной рекламной истории (adHistory) в упорядоченном списке формируется строка таблицы.
+                    // В строке указываются порядковый номер, количество повторений рекламы, время начала и окончания, а также название рекламы.
+                    // После добавления каждой строки инкрементируется счетчик i.
                 }
 
                 var table = string.Format(HtmlTable, rows, historyModel.History.Count(),
@@ -108,15 +125,19 @@ namespace Player.Services.Report.MediaPlan
                             $"{h.Advert.Name} {historyModel.History.Count(hi => hi.Advert.Id == h.Advert.Id)} раз")),
                     $"{historyModel.Object.City.Name} {historyModel.Object.Name}");
                 body.Append(table);
+                //Создается HTML-таблица из сгенерированных строк, общего количества показов истории и уникальных названий реклам.
+                // Таблица также включает название и город объекта.
             }
 
-            var sign = string.Format(Sign, _printImgBase64);
+            var sign = string.Format(Sign, _printImgBase64); // Добавляет изображение подписи в отчет.
             body.Append(sign);
-            body.Append(BottomText);
+            body.Append(BottomText); // Добавляет нижний текст отчета.
 
-            return body.ToString();
+            return body.ToString(); //    Вся собранная информация объединяется в одну строку HTML и возвращается как тело отчета.
+
+            //    Этот код отвечает за создание детализированного отчета по показам рекламы для разных объектов, включая подсчет количества показов и периодов показа, а также форматирование данных в удобочитаемую форму.
         }
-        
+
         private const string NewLine = "<br>";
         private const string Row = @"
                                 <tr>

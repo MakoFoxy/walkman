@@ -33,6 +33,7 @@ namespace Player.ReportSender
             _serviceProvider = serviceProvider;
             _reportGenerator = reportGenerator;
             _configuration = configuration;
+            //Конструктор ClientMediaPlanWorker инициализирует объекты, которые будут использоваться в работе службы: логгер (ILogger), поставщик сервисов (IServiceProvider), генератор отчетов (IReportGenerator<ClientMediaPlanPdfReportModel>) и конфигурацию (IConfiguration).
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -65,11 +66,17 @@ namespace Player.ReportSender
                     throw;
                 }
             }
+            //Этот метод является основной точкой входа для фоновой службы. Он выполняется в цикле до тех пор, пока служба активна (не получила сигнал о завершении работы). В каждой итерации цикла:
+
+            // Рассчитывается время до следующего запуска сервиса на основе настройки времени из конфигурации (Player:ReportTime).
+            // Служба "спит" до наступления запланированного времени.
+            // После пробуждения пытается выполнить метод DoWork, который содержит логику создания и отправки медиапланов. Любые исключения в этом процессе логируются.
         }
 
         private async Task DoWork(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
+            //Создает новый скоуп зависимостей, что позволяет использовать PlayerContext и другие сервисы в локальном контексте.
             await using var context = scope.ServiceProvider.GetRequiredService<PlayerContext>();
             var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
 
@@ -81,7 +88,7 @@ namespace Player.ReportSender
                 .Where(m => m.User.TelegramChatId.HasValue)
                 .Where(c => !c.User.Role.RolePermissions.Any(rp => rp.Permission.Code == Permission.PartnerAccessToObject))
                 .ToListAsync(stoppingToken);
-
+            //Запрашивает из базы данных список клиентов, у которых есть действующий Telegram чат ID и которые не имеют доступа к объекту в роли партнера.
             var allObjects = clients.SelectMany(u => u.User.Objects).Select(o => o.Object);
 
             var yesterday = DateTime.Today.AddDays(-1);
@@ -92,9 +99,10 @@ namespace Player.ReportSender
                 .ThenInclude(o => o.City)
                 .Where(ah => allObjects.Contains(ah.Object) && ah.End.Date == yesterday)
                 .ToListAsync(stoppingToken);
-
+            //Получает список всех рекламных историй для объектов, связанных с этими клиентами, за вчерашний день.
             foreach (var client in clients)
             {
+                //Для каждого клиента генерируется и отправляется отчет по каждому объекту, если для этого объекта были рекламные истории. Если нет рекламных историй для конкретного объекта, отправка отчета пропускается.
                 _logger.LogInformation("Sending mediaplan to client {ClientId}", client.Id);
                 foreach (var o in client.User.Objects.Select(ob => ob.Object))
                 {
@@ -110,7 +118,7 @@ namespace Player.ReportSender
                             _logger.LogInformation("Sending mediaplan to client {ClientId} skipped in object {ObjectId}", client.Id, o.Id);
                             continue;
                         }
-                        
+
                         var generatorResult = await _reportGenerator.Generate(new ClientMediaPlanPdfReportModel
                         {
                             Object = new Services.Report.Abstractions.Object
@@ -134,6 +142,7 @@ namespace Player.ReportSender
                         });
 
                         await telegramMessageSender.SendReport(client.User.TelegramChatId!.Value,
+                        //Используя сервис для отправки сообщений в Telegram, отчет в формате PDF отправляется клиенту.
                             generatorResult.Report,
                             $"{generatorResult.FileName}.{generatorResult.FileType}",
                             $"Доброе утро {client.User.SecondName} {client.User.LastName}, Ваш отчет по объекту {o.Name} за {yesterday:dd.MM.yyyy}");
@@ -141,9 +150,11 @@ namespace Player.ReportSender
                     }
                     catch (Exception e)
                     {
+                        //В случае возникновения ошибки в процессе генерации или отправки отчета, информация об ошибке логируется.
                         _logger.LogError(e, "Error with client {UserId} on {ObjectId}", client.User.Id, o.Id);
                     }
                 }
+                //Весь процесс предназначен для автоматизации уведомления клиентов о рекламных активностях на их объектах, предоставляя им подробные отчеты каждый день.
             }
         }
     }

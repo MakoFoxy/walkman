@@ -19,7 +19,7 @@ namespace Player.Reminder
         private readonly ILogger<SelectionOnObjectExpiredWorker> _logger;
         private readonly ServiceSettings _serviceSettings;
 
-        public SelectionOnObjectExpiredWorker(IOptions<ServiceSettings> options, 
+        public SelectionOnObjectExpiredWorker(IOptions<ServiceSettings> options,
             IServiceProvider serviceProvider,
             ITelegramMessageSender telegramMessageSender,
             ILogger<SelectionOnObjectExpiredWorker> logger
@@ -29,8 +29,9 @@ namespace Player.Reminder
             _telegramMessageSender = telegramMessageSender;
             _logger = logger;
             _serviceSettings = options.Value;
+            //Конструктор получает настройки сервиса, поставщик сервисов, сервис для отправки сообщений в Telegram и логгер через dependency injection. Эти зависимости используются в дальнейшей логике сервиса.
         }
-        
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -41,14 +42,19 @@ namespace Player.Reminder
                 {
                     timeLeft = timeLeft.Add(TimeSpan.FromDays(1));
                 }
-                
+
                 var nextWakeUpTime = DateTime.Now.Add(timeLeft);
-                
+
                 _logger.LogInformation("Worker wake up at {Time}", nextWakeUpTime);
                 await Task.Delay(timeLeft, stoppingToken);
                 _logger.LogInformation("Worker woke up");
-                
+
                 await DoWork(stoppingToken);
+                //Основной метод фоновой службы, который работает в бесконечном цикле до получения сигнала об остановке. Внутри цикла:
+
+                // Рассчитывается время до следующего запланированного пробуждения службы на основе настроек.
+                // Ожидается это время.
+                // Затем вызывается метод DoWork, где выполняется основная логика службы.
             }
         }
 
@@ -58,8 +64,8 @@ namespace Player.Reminder
 
             var context = scope.ServiceProvider.GetRequiredService<PlayerContext>();
             var expireDate = DateTimeOffset.Now.Date.AddDays(_serviceSettings.SelectionExpiredDays);
-            
-            var selections = await  context.Selections
+
+            var selections = await context.Selections
                 .Include(s => s.Objects)
                 .ThenInclude(so => so.Object)
                 .Where(s => s.DateEnd < expireDate)
@@ -75,7 +81,7 @@ namespace Player.Reminder
                 .Where(u => u.TelegramChatId.HasValue)
                 .Where(u => u.Objects.Any(o => objects.Contains(o.Object)))
                 .ToListAsync(cancellationToken);
-            
+
             foreach (var user in users)
             {
                 var objectsWithExpiredSelections = user.Objects.Select(uo => uo.Object).Intersect(objects);
@@ -94,6 +100,22 @@ namespace Player.Reminder
                     }
                 }
             }
+
+            //В этом методе:
+
+            // Создается новый облачный сервис для работы с зависимостями.
+            // Из сервис-провайдера извлекается контекст базы данных PlayerContext.
+            // Определяется дата, начиная с которой селекции считаются просроченными.
+            // Запрашивается список просроченных селекций и связанных с ними объектов из базы данных.
+            // Запрашиваются пользователи, у которых есть просроченные селекции, и которые имеют идентификатор чата Telegram для отправки уведомлений.
+            // Для каждого пользователя с просроченными селекциями формируются и отправляются сообщения о каждой просроченной селекции.
         }
     }
+    //Таким образом, эта служба отслеживает просроченные селекции объектов и уведомляет ответственных пользователей через Telegram, что позволяет своевременно реагировать на истечение срока действия селекций и предпринимать необходимые действия.
 }
+
+// /Термин "селекция" может иметь разные значения в зависимости от контекста. В вашем контексте, судя по коду, "селекция" вероятно относится к выборке или подборке определенных объектов или данных в системе. В контексте программного обеспечения или информационных систем, это может быть набор данных, объектов или элементов, которые были отобраны или выбраны для определенной цели.
+
+// Например, в музыкальном приложении или сервисе, селекция может означать подборку треков, плейлист, выбранный для воспроизведения в определенное время или для конкретного объекта (например, магазина, кафе, и т.д.). Селекции могут быть сформированы на основе различных критериев: жанра, популярности, времени суток, личных предпочтений пользователя и так далее.
+
+// В контексте вашего кода, кажется, что селекции относятся к определенным выборкам или наборам данных, связанным с объектами, и существует механизм для отслеживания их "срока действия". Когда селекция "истекает", то есть достигает определенной даты, после которой она считается устаревшей или недействительной, система должна уведомить ответственных лиц или пользователей, чтобы они могли обновить или изменить эту селекцию.
