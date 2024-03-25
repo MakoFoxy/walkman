@@ -13,27 +13,30 @@ namespace Player.Services
 {
     public class MusicTrackCreator : IMusicTrackCreator
     {
-        private readonly TrackNormalizer _trackNormalizer;
+        //Этот C# код представляет класс MusicTrackCreator, который реализует интерфейс IMusicTrackCreator. Он предназначен для создания музыкальных треков на основе предоставленных данных. Давайте разберем основные части кода:
+        private readonly TrackNormalizer _trackNormalizer; //Здесь MusicTrackCreator принимает экземпляр TrackNormalizer, который, предположительно, используется для нормализации звука треков.
 
         public MusicTrackCreator(TrackNormalizer trackNormalizer)
         {
             _trackNormalizer = trackNormalizer;
+            //Здесь MusicTrackCreator принимает экземпляр TrackNormalizer, который, предположительно, используется для нормализации звука треков.
         }
 
         public async Task<List<MusicTrack>> CreateMusicTracks(MusicTrackCreatorData creatorData)
         {
+            //Это асинхронный метод, который принимает данные для создания музыкальных треков (MusicTrackCreatorData) и возвращает список созданных музыкальных треков (List<MusicTrack>).
             var musicTracks = new List<MusicTrack>(creatorData.Tracks.Count);
 
             using var sha256 = SHA256.Create();
             foreach (var file in creatorData.Tracks.Select(f => new SimpleDto
             {
                 Id = f.Id,
-                Name = Path.Combine(creatorData.BasePath, f.Name) 
+                Name = Path.Combine(creatorData.BasePath, f.Name)
             }))
             {
-                _trackNormalizer.Normalize(file.Name);
-                var mediaInfo = await FFmpeg.GetMediaInfo(file.Name);
-                var hashString = new StringBuilder();
+                _trackNormalizer.Normalize(file.Name); //Каждый трек нормализуется для обеспечения согласованного уровня громкости.
+                var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); //var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); Используется FFmpeg для получения информации о медиафайле, включая длительность трека.
+                var hashString = new StringBuilder(); //Для каждого файла вычисляется его хеш SHA-256, который затем преобразуется в строку.
 
                 await using (var stream = File.OpenRead(file.Name))
                 {
@@ -46,6 +49,7 @@ namespace Player.Services
                 }
 
                 var musicTrack = new MusicTrack
+                //Создается новый объект MusicTrack, в котором заполняются все необходимые поля, включая идентификатор, путь к файлу, расширение, индекс, признак популярности, валидность, длительность, имя, тип трека, идентификатор загрузчика и хеш.
                 {
                     Id = file.Id,
                     FilePath = Path.GetRelativePath(creatorData.BasePath, file.Name),
@@ -61,15 +65,15 @@ namespace Player.Services
                 };
 
                 musicTrack.Genres.Add(new MusicTrackGenre
-                {
+                {//К каждому музыкальному треку добавляется жанр.
                     GenreId = creatorData.GenreId,
                     MusicTrack = musicTrack,
                 });
-                        
-                musicTracks.Add(musicTrack);
+
+                musicTracks.Add(musicTrack); //Все созданные треки добавляются в список musicTracks, который в конце метода возвращается вызывающему коду.
             }
 
-            return musicTracks;
+            return musicTracks; //Этот класс можно использовать в медиаплеере или системе управления контентом для создания и хранения информации о музыкальных треках, включая их обработку и каталогизацию.
         }
     }
 }
