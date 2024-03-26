@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Player.DataAccess;
 
 namespace Player.Tests
-{
+{//Ваш класс TestBase является базовым классом для тестирования, который использует SQLite в памяти для создания легковесной и изолированной базы данных для каждого теста. Это полезно для модульного тестирования, где вам нужно работать с базой данных, но вы не хотите затрагивать реальную базу данных или иметь дело с медленными внешними зависимостями. Вот как работает ваш класс:
     public class TestBase
     {
         protected PlayerContext PlayerContext = new PlayerContext();
@@ -11,19 +11,21 @@ namespace Player.Tests
         public TestBase()
         {
             InitDb();
+            //Этот конструктор автоматически инициализирует базу данных при создании экземпляра класса TestBase или любого класса, который от него наследуется. Это обеспечивает, что у каждого тестового случая будет своя собственная база данных.
         }
         
         protected void InitDb()
         {
-            var connection = new SqliteConnection("DataSource=:memory:;Foreign Keys=False");
-            connection.Open();
+            var connection = new SqliteConnection("DataSource=:memory:;Foreign Keys=False"); //Создает новое соединение с базой данных SQLite, которая существует только в памяти. Это означает, что база данных быстро создается и удаляется по завершении теста, что идеально подходит для тестирования. Опция Foreign Keys=False указывается для SQLite, так как по умолчанию SQLite не включает поддержку внешних ключей.
+            connection.Open(); //Открывает соединение с базой данных.
 
             var options = new DbContextOptionsBuilder<PlayerContext>()
                 .UseSqlite(connection)
-                .Options;
+                .Options; //Создает настройки контекста базы данных, указывая, что следует использовать SQLite и открытое соединение.
 
-            PlayerContext = new PlayerContext(options);
-            PlayerContext.Database.EnsureCreated();
+            PlayerContext = new PlayerContext(options); //Создает экземпляр PlayerContext с указанными настройками.
+            PlayerContext.Database.EnsureCreated(); //Убеждается, что база данных для контекста создается. Если база данных уже существует, этот метод не делает ничего.
         }
     }
+    //Класс TestBase может использоваться как основа для тестов, которым требуется доступ к базе данных. Наследуя от TestBase, тестовые классы автоматически получают свою собственную изолированную базу данных, которую они могут использовать во время тестирования, что делает тесты более надежными и менее зависимыми от внешнего окружения.
 }

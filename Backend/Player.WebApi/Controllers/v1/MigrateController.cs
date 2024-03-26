@@ -20,9 +20,9 @@ namespace Player.WebApi.Controllers.v1
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var pendingMigrations = await _context.Database.GetPendingMigrationsAsync();
-            await _context.Database.MigrateAsync();
-            return Ok(pendingMigrations);
+            var pendingMigrations = await _context.Database.GetPendingMigrationsAsync(); //Внутри метода сначала проверяются ожидающие миграции с помощью await _context.Database.GetPendingMigrationsAsync().
+            await _context.Database.MigrateAsync(); //Затем выполняются эти миграции с помощью await _context.Database.MigrateAsync().
+            return Ok(pendingMigrations); //В ответ на запрос возвращается список ожидающих миграций, что может быть полезно для проверки, какие миграции были применены.
         }
     }
 }
