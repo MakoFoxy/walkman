@@ -9,10 +9,10 @@ using Player.ClientIntegration.Client;
 namespace MarketRadio.Player.Workers
 {
     public class LocalTimeCheckWorker : PlayerBackgroundServiceBase
-    {
+    {//Этот код определяет класс LocalTimeCheckWorker, который является фоновой службой для проверки синхронизации локального времени с серверным временем. Давайте разберемся, что делает каждая часть этого класса:
         private readonly ISystemService _systemService;
         private readonly ILogger<LocalTimeCheckWorker> _logger;
-
+        //Это приватные поля для хранения инжектированных зависимостей.
         public LocalTimeCheckWorker(
             PlayerStateManager stateManager,
             ISystemService systemService,
@@ -21,10 +21,11 @@ namespace MarketRadio.Player.Workers
         {
             _systemService = systemService;
             _logger = logger;
+            //Конструктор принимает три параметра: stateManager для управления состоянием плеера, systemService для получения времени с сервера, и logger для логирования. Эти зависимости инжектируются через механизм внедрения зависимостей.
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
+        {//Это основной метод фоновой службы, который выполняется в цикле до получения запроса на остановку через stoppingToken. Внутри цикла:
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -35,8 +36,11 @@ namespace MarketRadio.Player.Workers
                 {
                     _logger.LogError(e, "");
                 }
-                
+
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                //                 Вызывается метод DoWork, который выполняет логику проверки времени.
+                // В случае возникновения исключения оно логируется с помощью _logger.
+                // После каждой итерации выполнения задержка на час с помощью Task.Delay.
             }
         }
 
@@ -54,6 +58,9 @@ namespace MarketRadio.Player.Workers
             {
                 await LogOrResendRequest(firstRequest, beforeTime, serverTime, afterTime);
             }
+            //    Вызывается метод DoWork, который выполняет логику проверки времени.
+            // В случае возникновения исключения оно логируется с помощью _logger.
+            // После каждой итерации выполнения задержка на час с помощью Task.Delay.
         }
 
         private async Task LogOrResendRequest(bool firstRequest, DateTimeOffset beforeTime, CurrentTimeDto serverTime,
@@ -68,6 +75,8 @@ namespace MarketRadio.Player.Workers
                 _logger.LogWarning("Problems with server sync TimeBeforeRequest:{TimeBeforeRequest} ServerTime:{ServerTime} TimeAfterRequest:{TimeAfterRequest}",
                     beforeTime, serverTime.CurrentTime, afterTime);
             }
+            //Если это первый запрос (firstRequest == true), метод пытается выполнить DoWork еще раз. В противном случае логируется предупреждение о задержке синхронизации времени с сервером.
+
         }
 
         private void CheckLocalTime(DateTimeOffset beforeTime, CurrentTimeDto serverTime, DateTimeOffset afterTime)
@@ -83,6 +92,8 @@ namespace MarketRadio.Player.Workers
                 _logger.LogWarning("Problems with local time TimeBeforeRequest:{TimeBeforeRequest} ServerTime:{ServerTime} TimeAfterRequest:{TimeAfterRequest}",
                     beforeTime, serverTime.CurrentTime, afterTime);
             }
+            //Проверяет, соответствует ли локальное время серверному времени в пределах замеренного интервала (beforeTime и afterTime). Если локальное время находится в пределах этого интервала, логируется информационное сообщение о корректности времени. В противном случае логируется предупреждение о несоответствии времени.
         }
+        //Этот класс демонстрирует практику работы с асинхронными фоновыми службами в .NET, используя System.Threading.Tasks.Task для асинхронных операций и System.Threading.CancellationToken для управления остановкой службы. Особое внимание уделяется обработке исключений и логированию, что критически важно для диагностики и поддержки фоновых служб в продакшене.
     }
 }
