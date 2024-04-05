@@ -77,7 +77,7 @@ export default class SimpleSettings extends Vue {
   showFullSettingsDialog = false
 
   async openSite() {
-    const url = 'https://909.kz/';
+    const url = 'https://localhost/';
     await fetch(`/api/system/open-url?url=${url}`);
     this.showAdvertAddDialog = false;
   }
