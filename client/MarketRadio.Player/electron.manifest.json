@@ -21,7 +21,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://publisher.909.kz/client/"
+        "url": "https://localhost/client/"
       }
     ],
     "directories": {
