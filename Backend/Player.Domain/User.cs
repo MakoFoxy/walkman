@@ -14,7 +14,7 @@ namespace Player.Domain
         public string SecondName { get; set; }
         public string FullName => $"{LastName} {FirstName[0]}.{SecondName?[0]}.";
         public Role Role { get; set; }
-        public Guid RoleId { get; set; }
+        public Guid? RoleId { get; set; }
         public long? TelegramChatId { get; set; }
         public ICollection<UserObjects> Objects { get; set; } = new List<UserObjects>();
 

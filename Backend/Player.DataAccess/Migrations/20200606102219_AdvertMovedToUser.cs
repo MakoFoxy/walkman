@@ -33,29 +33,14 @@ namespace Player.DataAccess.Migrations
 
             migrationBuilder.DropColumn(
                 name: "ClientId",
-                table: "Adverts");
-
-            migrationBuilder.AlterColumn<Guid>(
-                name: "RoleId",
-                table: "Users",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid",
-                oldNullable: true);
+                table: "Adverts");           
 
             migrationBuilder.AddColumn<Guid>(
                 name: "OrganizationId",
                 table: "Adverts",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
-
-            migrationBuilder.UpdateData(
-                table: "Users",
-                keyColumn: "Id",
-                keyValue: new Guid("07abf324-2fc7-44fd-ba41-ada305a33c9d"),
-                column: "RoleId",
-                value: new Guid("00000000-0000-0000-0000-000000000000"));
-
+         
             migrationBuilder.CreateIndex(
                 name: "IX_Adverts_OrganizationId",
                 table: "Adverts",

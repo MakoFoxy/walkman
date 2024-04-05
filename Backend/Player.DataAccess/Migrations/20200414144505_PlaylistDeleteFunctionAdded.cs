@@ -17,7 +17,7 @@ delete from ""MusicTrackPlaylists"" where ""PlaylistId"" = id;
     delete from ""Playlists"" where ""Id"" = id;
 $$;
 
-alter function delete_playlist(uuid) owner to walkman_admin;
+alter function delete_playlist(uuid) owner to postgres;
                                 ");
         }
 
