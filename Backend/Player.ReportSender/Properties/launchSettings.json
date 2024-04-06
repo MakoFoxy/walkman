@@ -2,6 +2,9 @@
   "profiles": {
     "Player.ReportSender": {
       "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:5005;",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }
