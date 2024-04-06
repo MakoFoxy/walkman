@@ -3,11 +3,11 @@ module.exports = {
     "devServer": {
       "proxy": {
         "/api": {
-          "target": "https://dev.909.kz",
+          "target": "http://localhost:5003",
           "changeOrigin": true
         },
         "/songs": {
-          "target": "https://dev.909.kz",
+          "target": "http://localhost:5000",
           "changeOrigin": true
         }
       }
