@@ -48,7 +48,15 @@ namespace Player.Services
             }
 
             var user = await GetUserById(GetUserId(), cancellationToken);
-            return user.Role.RolePermissions.Select(rp => rp.Permission).ToList();
+            if (user?.Role?.RolePermissions != null)
+            {
+                return user.Role.RolePermissions.Select(rp => rp.Permission).ToList();
+            }
+            else
+            {
+                Console.WriteLine("Пользователь не найден или у пользователя отсутствуют разрешения.");
+                throw new InvalidOperationException("Пользователь не найден или у пользователя отсутствуют разрешения.");
+            }
         }
 
         public async Task<Organization> GetUserOrganization(CancellationToken cancellationToken = default)
