@@ -15,7 +15,7 @@ using Player.Domain;
 namespace Player.BusinessLogic.Features.Organizations
 {
     public class Create
-    {
+    {//Ваш код в Create.Handler асинхронно обрабатывает команду на создание новой организации, включая клиентов и связи между клиентами и объектами. После успешного выполнения этой операции, данные о новой организации и связанных с ней сущностях сохраняются в базе данных.
         public class Validator : AbstractValidator<OrganizationModel>
         {
             public Validator(
@@ -107,6 +107,5 @@ namespace Player.BusinessLogic.Features.Organizations
             public OrganizationModel OrganizationModel { get; set; }
         }
     }
-
 
 }

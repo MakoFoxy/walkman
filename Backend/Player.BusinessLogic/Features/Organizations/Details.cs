@@ -13,7 +13,7 @@ namespace Player.BusinessLogic.Features.Organizations
     public class Details
     {
         public class Handler : IRequestHandler<Query, OrganizationModel>
-        {
+        { //Когда вы вызываете OrganizationsController.Get после выполнения Create.Handler, вы будете запрашивать данные из базы данных, которые уже включают информацию о ранее созданных организациях. В зависимости от того, как реализован метод Get в вашем OrganizationsController, вы можете получить различные данные:
             private readonly PlayerContext _context;
 
             public Handler(PlayerContext context)

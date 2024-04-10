@@ -8,6 +8,7 @@ using Player.DataAccess; // Подключение пространства им
 
 namespace Player.AuthorizationLogic // Определение пространства имен, содержащего логику авторизации.
 {
+    
     public class PermissionHandler : AuthorizationHandler<PermissionRequirement> // Объявление класса PermissionHandler, который является обработчиком авторизации для проверки прав на основе PermissionRequirement.
     {
         private readonly PlayerContext _context; // Объявление приватного поля для контекста базы данных.
