@@ -25,18 +25,18 @@ namespace Player.WebApi.Controllers.v1.Dictionary
 
         [HttpGet("{id:Guid}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<OrganizationModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query { Id = id }, cancellationToken);
+        public async Task<OrganizationModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query { Id = id }, cancellationToken); //Описание: Метод асинхронно возвращает детальную информацию об организации по её идентификатору. Возвращаемый объект OrganizationModel содержит данные организации, такие как Id, Name, Bin, Address, Bank, Iik, Phone, а также связанные данные о клиентах и объектах через вложенные запросы к другим таблицам.
 
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<BaseFilterResult<List.OrganizationShortInfoModel>> Get([FromQuery] BaseFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken);
+        public async Task<BaseFilterResult<List.OrganizationShortInfoModel>> Get([FromQuery] BaseFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); //Описание: Метод асинхронно возвращает список организаций с пагинацией. Использует фильтры для лимитирования и смещения в запросе. Возвращает данные организаций включая Id, Name, Bin, Address, Bank, Iik, Phone, и количество пользователей (UserCount), ассоциированных с каждой организацией.
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> Post([FromBody] OrganizationModel model, CancellationToken cancellationToken)
         {
             await _mediator.Send(new Create.Command { OrganizationModel = model }, cancellationToken);
-            return Ok();
+            return Ok(); //Этот метод асинхронно обрабатывает POST запрос на создание новой организации, принимая модель данных организации и токен отмены операции. По завершении обработки запроса, если все операции прошли успешно, метод возвращает StatusCodeResult с HTTP статусом 200, что означает успешное выполнение запроса без возврата каких-либо данных в теле ответа.
         }
 
         [HttpPut]
@@ -45,7 +45,7 @@ namespace Player.WebApi.Controllers.v1.Dictionary
         {
             await _mediator.Send(new Edit.Command { OrganizationModel = model }, cancellationToken);
             return Ok();
-        }
+        } //Описание: Метод обрабатывает обновление данных организации на основе предоставленной модели OrganizationModel. Возвращает статусный код 200 (OK) после обновления данных, включая взаимодействие с таблицами UserObjects и Users.
         //         OrganizationsController в вашем ASP.NET Core приложении предназначен для управления организациями. Он обеспечивает следующие HTTP эндпоинты:
 
         //     GET /organizations/{id}: Получает информацию об одной организации по её идентификатору (id). Этот запрос обрабатывается методом Get(Guid id, CancellationToken cancellationToken), который использует медиатор для отправки запроса Details.Query {Id = id}. Запрос обрабатывается обработчиком Details.Handler, который извлекает данные об организации из базы данных и возвращает их в виде OrganizationModel.

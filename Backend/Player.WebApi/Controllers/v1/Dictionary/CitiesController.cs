@@ -25,5 +25,8 @@ namespace Player.WebApi.Controllers.v1.Dictionary
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllCities, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<List<List.CityModel>> Get(CancellationToken cancellationToken) => await _mediator.Send(new List.Query(), cancellationToken);
+
+        //    Описание: Получение списка всех городов. Возвращает данные о городах, включая идентификаторы и названия.
+        // Возвращаемое значение: Возвращается HTTP 200 с JSON содержащим список городов.
     }
 }

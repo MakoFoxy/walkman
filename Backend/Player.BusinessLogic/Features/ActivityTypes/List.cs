@@ -30,6 +30,9 @@ namespace Player.BusinessLogic.Features.ActivityTypes
                 return _context.ActivityTypes
                     .ProjectTo<ActivityTypeModel>(_mapper.ConfigurationProvider)
                     .ToListAsync(cancellationToken);
+                    //Name
+                    //Code
+                    //Id
             }
 
             // Это вложенный класс, который реализует интерфейс IRequestHandler из пакета MediatR. Это означает, что Handler обрабатывает запросы типа Query и возвращает список типов деятельности в формате ActivityTypeModel.

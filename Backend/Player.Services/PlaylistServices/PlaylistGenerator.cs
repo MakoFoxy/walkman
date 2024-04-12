@@ -193,16 +193,25 @@ public class PlaylistGenerator : BasePlaylistGenerator
     private void PopulateMusicTracks(Playlist playlist, ObjectInfo objectInfo, ICollection<MusicTrack> musicTracks)
     //Этот код отвечает за заполнение плейлиста музыкальными треками
     {
+        if (!musicTracks.Any())
+        {
+            DebugInfo.Add("No music tracks available.");
+            return; // Выход, если треков нет.
+        }
         playlist.MusicTracks.Clear(); //Эта строка удаляет все существующие музыкальные треки из плейлиста, чтобы начать распределение заново.
         var currentTime = objectInfo.BeginTime; //var currentTime = objectInfo.BeginTime;: Устанавливает начальное время воспроизведения музыкальных треков равным времени начала работы объекта (например, открытия магазина или ресторана).
 
         using IEnumerator<MusicTrack> musicTrackEnumerator = musicTracks.GetEnumerator(); //Создает перечислитель для коллекции музыкальных треков, чтобы последовательно итерировать по ним.
-
+        musicTrackEnumerator.MoveNext(); // Перемещаемся к первому треку перед началом цикла
         // todo проверить 24 часа
         while (currentTime <= objectInfo.EndTime) //Цикл продолжается до тех пор, пока текущее время не превысит время окончания работы объекта.
         {
             var currentTrack = GetCurrentMusicTrack(musicTrackEnumerator); //Вызывает метод, который получает следующий музыкальный трек из коллекции. Если треки закончились, перечислитель начинается сначала.
-
+            if (currentTrack == null)
+            {
+                DebugInfo.Add("Reached end of music tracks.");
+                break; // Выход из цикла, если треков больше нет
+            }
             var musicTrackPlaylist = new MusicTrackPlaylist
             {
                 Playlist = playlist,
@@ -218,16 +227,19 @@ public class PlaylistGenerator : BasePlaylistGenerator
         MusicTrack GetCurrentMusicTrack(IEnumerator<MusicTrack> enumerator)
         //Эта функция GetCurrentMusicTrack используется для получения текущего музыкального трека из коллекции музыкальных треков:
         {
-            if (enumerator.MoveNext())
+            if (!enumerator.MoveNext())
             //if (enumerator.MoveNext()): Проверяет, существует ли следующий элемент в коллекции (в данном случае в списке музыкальных треков). Метод MoveNext перемещает перечислитель к следующему элементу в коллекции.
 
             {
-                return enumerator.Current;
-                //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
+                enumerator.Reset(); //enumerator.Reset();: Если в коллекции не осталось элементов (метод MoveNext вернул false), метод Reset сбрасывает перечислитель к началу коллекции, так что он снова указывает на место перед первым элементом коллекции.
+                enumerator.MoveNext(); // Переместиться к первому элементу после сброса
+                // return enumerator.Current;
+                // //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
             }
-
-            enumerator.Reset(); //enumerator.Reset();: Если в коллекции не осталось элементов (метод MoveNext вернул false), метод Reset сбрасывает перечислитель к началу коллекции, так что он снова указывает на место перед первым элементом коллекции.
-            return GetCurrentMusicTrack(enumerator); //return GetCurrentMusicTrack(enumerator);: После сброса перечислителя метод рекурсивно вызывает себя, чтобы начать перебор с начала коллекции и получить первый музыкальный трек после сброса. Это гарантирует, что музыкальные треки будут повторно использоваться в плейлисте, если все треки уже были проиграны.
+            return enumerator.Current;
+            //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
+            // enumerator.Reset(); //enumerator.Reset();: Если в коллекции не осталось элементов (метод MoveNext вернул false), метод Reset сбрасывает перечислитель к началу коллекции, так что он снова указывает на место перед первым элементом коллекции.
+            // return GetCurrentMusicTrack(enumerator); //return GetCurrentMusicTrack(enumerator);: После сброса перечислителя метод рекурсивно вызывает себя, чтобы начать перебор с начала коллекции и получить первый музыкальный трек после сброса. Это гарантирует, что музыкальные треки будут повторно использоваться в плейлисте, если все треки уже были проиграны.
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,9 +27,12 @@ namespace Player.BusinessLogic.Features.Roles
                 //Handler – это класс обработчика, реализующий интерфейс IRequestHandler из MediatR. Он принимает запрос типа Query и возвращает список ролей в формате RoleModel. В его конструкторе используются контекст данных PlayerContext для доступа к базе данных и маппер IMapper для преобразования сущностей базы данных в модели данных.
             }
 
-            public Task<List<RoleModel>> Handle(Query request, CancellationToken cancellationToken = default)
+            public async Task<List<RoleModel>> Handle(Query request, CancellationToken cancellationToken = default)
             {
                 var query = _context.Roles.AsQueryable();
+                Debug.WriteLine($"queryquery123 {query}"); // Посмотрите, что выводится здесь
+                var queryLog = query.ToQueryString(); // Для EF Core 5 и выше
+                Debug.WriteLine($"queryLog {queryLog}"); // Посмотрите, что выводится здесь
 
                 query = request.Filter switch
                 {
@@ -37,8 +41,9 @@ namespace Player.BusinessLogic.Features.Roles
                     RoleFilter.Client => query.Where(r => !r.IsAdminRole),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.Filter))
                 };
-
-                return query.ProjectTo<RoleModel>(_mapper.ConfigurationProvider).ToListAsync(cancellationToken);
+                var result = await query.ProjectTo<RoleModel>(_mapper.ConfigurationProvider).ToListAsync(cancellationToken);
+                Debug.WriteLine($"Returning {result.Count} roles.");
+                return result;
                 //Этот метод асинхронно обрабатывает запрос на получение списка ролей, фильтруя их в зависимости от значения request.Filter. Метод использует AutoMapper для проецирования данных из сущностей в модели.
                 // Фильтрация:
 

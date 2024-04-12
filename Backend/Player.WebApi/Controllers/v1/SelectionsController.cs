@@ -26,12 +26,11 @@ namespace Player.WebApi.Controllers.v1
 
         [HttpGet("{id:Guid}")]
         [Authorize(Policy = Permission.ReadSelectionById, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<Details.SelectionModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query {Id = id}, cancellationToken); 
+        public async Task<Details.SelectionModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query { Id = id }, cancellationToken);
 
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllSelections, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<List.SelectionFilterResult> Get([FromQuery]List.SelectionFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); ////SelectionsController - контроллер для обработки запросов к музыкальным подборкам (/api/v1/selections). В частности, был выполнен запрос на получение актуальных музыкальных подборок.
-
+        public async Task<List.SelectionFilterResult> Get([FromQuery] List.SelectionFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); ////SelectionsController - контроллер для обработки запросов к музыкальным подборкам (/api/v1/selections). В частности, был выполнен запрос на получение актуальных музыкальных подборок.Описание: Получение списка выборок (selections) с возможностью фильтрации по актуальности. Возвращает отфильтрованный список с идентификаторами, названиями и другими данными. Возвращаемое значение: Возвращается HTTP 200 с JSON содержащим список выборок согласно фильтрам.
         [HttpGet("all")]
         [Authorize(Policy = Permission.ReadAllSelections, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ICollection<List.SelectionListModel>> GetAll(CancellationToken cancellationToken)
@@ -42,9 +41,9 @@ namespace Player.WebApi.Controllers.v1
 
         [HttpPost]
         [Authorize(Policy = Permission.CreateSelection, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> Post([FromBody]UpdateSelectionModel model, CancellationToken token)
+        public async Task<IActionResult> Post([FromBody] UpdateSelectionModel model, CancellationToken token)
         {
-            await _mediator.Send(new Create.Command {Model = model}, token);
+            await _mediator.Send(new Create.Command { Model = model }, token);
             return Ok();
         }
 
@@ -52,7 +51,7 @@ namespace Player.WebApi.Controllers.v1
         [Authorize(Policy = Permission.EditSelection, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> Put([FromBody] UpdateSelectionModel model, CancellationToken token)
         {
-            await _mediator.Send(new Edit.Command{Model = model}, token);
+            await _mediator.Send(new Edit.Command { Model = model }, token);
             return Ok();
         }
 
