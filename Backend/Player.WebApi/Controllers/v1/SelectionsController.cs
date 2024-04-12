@@ -26,11 +26,11 @@ namespace Player.WebApi.Controllers.v1
 
         [HttpGet("{id:Guid}")]
         [Authorize(Policy = Permission.ReadSelectionById, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<Details.SelectionModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query {Id = id}, cancellationToken);
+        public async Task<Details.SelectionModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query {Id = id}, cancellationToken); 
 
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllSelections, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<List.SelectionFilterResult> Get([FromQuery]List.SelectionFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken);
+        public async Task<List.SelectionFilterResult> Get([FromQuery]List.SelectionFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); ////SelectionsController - контроллер для обработки запросов к музыкальным подборкам (/api/v1/selections). В частности, был выполнен запрос на получение актуальных музыкальных подборок.
 
         [HttpGet("all")]
         [Authorize(Policy = Permission.ReadAllSelections, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

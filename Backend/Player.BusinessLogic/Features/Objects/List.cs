@@ -32,7 +32,7 @@ namespace Player.BusinessLogic.Features.Objects
 
             public async Task<BaseFilterResult<ObjectModel>> Handle(Query request,
                 CancellationToken cancellationToken = default)
-            {
+            {//Метод Handle возвращает объект BaseFilterResult<ObjectModel>, который содержит отфильтрованный список объектов (Result), а также информацию для пагинации (Page, ItemsPerPage, TotalItems), что позволяет клиенту удобно отображать данные с поддержкой разбивки на страницы.
                 var result = new BaseFilterResult<ObjectModel>
                 {
                     Page = request.Filter.Page,
@@ -44,6 +44,7 @@ namespace Player.BusinessLogic.Features.Objects
                 if (!string.IsNullOrWhiteSpace(request.Filter.Name))
                 {
                     query = query.Where(o => o.Name.ToLower().Contains(request.Filter.Name.ToLower()));
+                    //В этом участке кода проверяется, указано ли в запросе имя объекта (request.Filter.Name). Если имя указано, запрос к базе данных модифицируется так, чтобы выбирать только те объекты, имя которых содержит указанную строку. Сравнение происходит без учета регистра, что обеспечивает более гибкий поиск.
                 }
 
                 if (request.Filter.IsOnline)
@@ -54,7 +55,7 @@ namespace Player.BusinessLogic.Features.Objects
                 var permissions = await _userManager.GetCurrentUserPermissions(cancellationToken);
 
                 if (permissions.Any(p => p.Code == Permission.PartnerAccessToObject))
-                {
+                {//Также в обработчике предусмотрена логика для работы с правами пользователя, что позволяет фильтровать объекты в зависимости от организации пользователя, если у пользователя есть соответствующие права (Permission.PartnerAccessToObject). Это делает систему гибкой и безопасной, ограничивая доступ к объектам на основе роли и организации пользователя.
                     var organization = await _userManager.GetUserOrganization(cancellationToken);
 
                     query = query.Where(o => _context.Organizations

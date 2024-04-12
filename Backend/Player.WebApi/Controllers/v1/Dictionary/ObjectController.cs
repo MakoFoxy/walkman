@@ -34,7 +34,7 @@ namespace Player.WebApi.Controllers.v1.Dictionary
 
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllObjects, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<BaseFilterResult<ObjectModel>> Get([FromQuery]List.ObjectFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query{Filter = model}, cancellationToken);
+        public async Task<BaseFilterResult<ObjectModel>> Get([FromQuery]List.ObjectFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query{Filter = model}, cancellationToken); //фильтрация используется для поиска объектов в базе данных по имени объекта, а также предоставляет возможность фильтрации объектов по их онлайн статусу и применения других критериев фильтрации, указанных в ObjectFilterModel.
 
         [HttpGet("user")]
         [Authorize(Policy = Permission.ReadAllObjects, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
