@@ -93,43 +93,51 @@ namespace Player.BusinessLogic.Features.Objects
                 {
                     await _objectApi.ObjectInfoChanged(objectInfo.Id,
                         _httpContextAccessor.HttpContext.Request.Headers["Authorization"]);
+
+                    //                         Отправка уведомления: Если информация об объекте успешно обновлена, вызывает метод ObjectInfoChanged у _objectApi для уведомления внешних систем.
+                    // Проверка изменений: Определяет, были ли изменения в расписании работы или конфигурации плейлиста, что может потребовать дополнительных действий, таких как перегенерация плейлистов.
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Service unavailable");
+                    _logger.LogError(e, "Service unavailable"); //    В случае ошибок при вызове внешнего API, они логируются как "Service unavailable".
                 }
 
                 if (!workTimeChanged && !playlistConfigurationChanged)
                 {
-                    return Unit.Value;
+                    return Unit.Value; //    Метод возвращает Unit.Value, что является стандартным способом указать на успешное завершение операции в CQRS (Command Query Responsibility Segregation) паттернах, где не требуется возвращать результат.
+                    //WorkTimeChanged и PlaylistConfigurationChanged проверяют, изменились ли определённые аспекты объекта, что может потребовать дополнительных действий, таких как обновление плейлистов.
                 }
 
                 _logger.LogTrace("Object {ObjectId} work time or playlist configuration changed", objectInfo.Id);
-                var advertIds = await _context.Playlists
-                    .Where(p => p.Object == objectInfo && p.PlayingDate > DateTime.Today)
-                    .SelectMany(p => p.Aderts).Select(ap => ap.Advert.Id).Distinct()
+                var advertIds = await _context.Playlists //Извлечение идентификаторов реклам: Используется LINQ запрос для получения списка уникальных идентификаторов рекламных блоков из плейлистов, которые:
+                    .Where(p => p.Object == objectInfo && p.PlayingDate > DateTime.Today) //Связаны с определенным объектом (objectInfo). Имеют дату воспроизведения больше текущей даты (DateTime.Today).
+                    .SelectMany(p => p.Aderts).Select(ap => ap.Advert.Id).Distinct() //Для этого код фильтрует плейлисты по объекту и дате, извлекает рекламные блоки (Adverts), получает их идентификаторы и использует Distinct() для удаления дубликатов, прежде чем преобразовать итоговый список в список с помощью ToListAsync().
                     .ToListAsync(cancellationToken);
 
                 foreach (var advertId in advertIds)
                 {
-                    await _playerTaskCreator.AddPlaylistGenerationTask(advertId, cancellationToken);
+                    await _playerTaskCreator.AddPlaylistGenerationTask(advertId, cancellationToken); //Создание задач генерации плейлистов: Для каждого уникального идентификатора рекламы вызывается метод AddPlaylistGenerationTask, который, вероятно, создает задачу для генерации нового плейлиста с учетом изменений, произошедших в объекте. Это может включать пересчет временных слотов или обновление конфигурации плейлиста.
                 }
 
-                await _context.SaveChangesAsync(cancellationToken);
-                return Unit.Value;
+                await _context.SaveChangesAsync(cancellationToken); //Сохранение изменений в базе данных: После выполнения всех изменений вызывается SaveChangesAsync() для сохранения всех изменений в базе данных.
+                return Unit.Value; //Возвращение результата: Возвращается значение Unit.Value, что является способом в C# указать, что метод возвращает пустой результат (void), но при этом поддерживает асинхронные операции.
             }
 
             private bool WorkTimeChanged(ObjectInfo objectInfo, ObjectInfoModel objectInfoModel)
-            {
+            {//Эта функция проверяет, изменились ли времена начала или окончания работы объекта, а также список выходных дней. Она возвращает true, если были обнаружены изменения в следующих полях:     BeginTime: Время начала работы объекта.
+             // EndTime: Время окончания работы объекта.
+             // FreeDays: Список дней, когда объект не работает.
                 return objectInfo.BeginTime != objectInfoModel.BeginTime ||
                        objectInfo.EndTime != objectInfoModel.EndTime ||
                        !objectInfo.FreeDays.OrderBy(fd => fd)
                            .SequenceEqual(objectInfoModel.FreeDays.OrderBy(fd => fd));
+                //Функция сравнивает текущие значения в базе данных (objectInfo) с новыми значениями, предоставленными пользователем (objectInfoModel). Она также использует метод SequenceEqual после сортировки списка дней для точного сравнения порядка элементов, чтобы проверить, не изменился ли порядок или состав дней, в которые объект не работает.
             }
 
             private bool PlaylistConfigurationChanged(ObjectInfo objectInfo, ObjectInfoModel objectInfoModel)
             {
                 return objectInfo.MaxAdvertBlockInSeconds != objectInfoModel.MaxAdvertBlockInSeconds;
+                //Эта функция проверяет, были ли изменения в настройках конфигурации плейлиста, точнее в максимальной продолжительности рекламного блока в секундах (MaxAdvertBlockInSeconds). Она возвращает true, если значение максимальной продолжительности блока рекламы изменилось между текущим значением в базе данных и новым значением, предоставленным в objectInfoModel.
             }
 
             //Основная логика обработки команды редактирования объекта. Метод асинхронно обновляет данные объекта в базе данных и оповещает соответствующие сервисы или компоненты системы об изменениях.

@@ -13,7 +13,7 @@ using ObjectModel = Player.BusinessLogic.Features.Objects.Models.ObjectModel;
 namespace Player.BusinessLogic.Features.Objects
 {
     public class GetUserObjects
-    {
+    {//GetUserObjects.Response содержит список объектов, каждый из которых является экземпляром ObjectModel. Вот подробное описание того, как это работает в контексте вашего API: GetUserObjects.Response — это класс, предназначенный для хранения и передачи результатов запроса на получение объектов, связанных с пользователем. Он включает в себя список объектов типа ObjectModel, каждый из которых представляет собой конкретный объект с атрибутами и данными, такими как загрузка, количество реклам и другие детали.
         public class Handler : IRequestHandler<Query, Response>
         {
             private readonly PlayerContext _context;
@@ -96,6 +96,15 @@ namespace Player.BusinessLogic.Features.Objects
         {
             public List<ObjectModel> Objects { get; set; } = new();
             //Response содержит список объектов в формате ObjectModel, который представляет собой ответ на запрос.
+            //   ObjectModel включает поля:
+
+            // Id: уникальный идентификатор объекта.
+            // Name: имя или название объекта.
+            // ActualAddress: физический адрес объекта.
+            // BeginTime и EndTime: временные рамки действия или работы объекта.
+            // Loading, UniqueAdvertCount, AllAdvertCount, Overloaded: данные о плейлистах и рекламных метриках на определенную дату.
+            // PlaylistExist: существует ли плейлист на текущую дату.
+            // IsOnline: статус онлайн доступности объекта.
         }
     }
     //В итоге, этот код обеспечивает функциональность для получения и отображения списка объектов, ассоциированных с текущим пользователем, что может быть использовано, например, в пользовательском интерфейсе для отображения списка мест или помещений, которыми управляет пользователь.

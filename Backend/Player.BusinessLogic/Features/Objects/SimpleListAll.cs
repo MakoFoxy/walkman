@@ -88,6 +88,8 @@ namespace Player.BusinessLogic.Features.Objects
         {
             public int Priority { get; set; }
             // ObjectDto представляет собой структуру данных (DTO), которая используется для передачи информации об объекте клиенту. Она содержит идентификатор объекта, его имя и приоритет.
+            //public Guid Id { get; set; }
+            // public string Name { get; set; }
         }
     }
 }

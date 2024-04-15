@@ -32,7 +32,7 @@ namespace Player.BusinessLogic.Features.Objects
 
             public async Task<BaseFilterResult<ObjectModel>> Handle(Query request,
                 CancellationToken cancellationToken = default)
-            {//Метод Handle возвращает объект BaseFilterResult<ObjectModel>, который содержит отфильтрованный список объектов (Result), а также информацию для пагинации (Page, ItemsPerPage, TotalItems), что позволяет клиенту удобно отображать данные с поддержкой разбивки на страницы.
+            {//Метод Handle возвращает объект BaseFilterResult<ObjectModel>, который содержит отфильтрованный список объектов (Result), а также информацию для пагинации (Page, ItemsPerPage, TotalItems), что позволяет клиенту удобно отображать данные с поддержкой разбивки на страницы. Результат: Возвращает BaseFilterResult<ObjectModel>, который содержит информацию о объектах, включая их идентификаторы, названия, адреса и другие свойства. В ответе также указывается общее количество объектов, которые соответствуют критериям фильтрации.
                 var result = new BaseFilterResult<ObjectModel>
                 {
                     Page = request.Filter.Page,

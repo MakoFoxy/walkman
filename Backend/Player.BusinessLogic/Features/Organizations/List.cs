@@ -11,7 +11,8 @@ using Player.DTOs;
 using Player.Services.Abstractions;
 
 namespace Player.BusinessLogic.Features.Organizations
-{
+{//Этот метод используется для получения списка организаций, возможно с учетом фильтрации и пагинации. Он принимает параметры для фильтрации и пагинации через BaseFilterModel.
+// Возвращает объект BaseFilterResult содержащий список OrganizationShortInfoModel, который включает краткую информацию о каждой организации, такую как ID, имя, и другие базовые данные. Это позволяет клиенту получить обзорные данные организаций без загрузки полного набора деталей каждой из них.
     public class List
     {
         public class Handler : IRequestHandler<Query, BaseFilterResult<OrganizationShortInfoModel>>

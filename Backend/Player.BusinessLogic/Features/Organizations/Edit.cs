@@ -11,7 +11,9 @@ using Player.Domain;
 namespace Player.BusinessLogic.Features.Organizations
 {
     public class Edit
-    {
+    {//    Сигнатура метода: System.Threading.Tasks.Task1[Microsoft.AspNetCore.Mvc.IActionResult] Put(Player.BusinessLogic.Features.Organizations.Models.OrganizationModel, System.Threading.CancellationToken)`
+    // Этот метод обрабатывает запросы PUT для обновления данных организации в базе данных. Принимает модель OrganizationModel, содержащую новые или измененные данные организации, и обновляет соответствующие записи в базе данных.
+    // Возвращает статус код 200 (OK), если обновление прошло успешно, подтверждая успешное выполнение операции.
         public class Handler : IRequestHandler<Command>
         {
             private readonly PlayerContext _context;

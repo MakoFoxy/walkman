@@ -25,9 +25,9 @@ namespace Player.WebApi.Controllers.v1.Dictionary
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllServiceCompanies, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ICollection<List.ServiceCompanyModel>> Get(CancellationToken cancellationToken) => await _mediator.Send(new List.Query(), cancellationToken);
-        //ServiceCompanyController - контроллер, отвечающий за запросы к сервисным компаниям (/api/v1/service-company). Возвращает список сервисных компаний.
+        //ServiceCompanyController - контроллер, отвечающий за запросы к сервисным компаниям (/api/v1/service-company). Возвращает список сервисных компаний.Возвращает список объектов ServiceCompanyModel, который содержит идентификаторы и названия сервисных компаний. Возвращаемое значение: Возвращает список ServiceCompanyModel, содержащий идентификаторы и названия сервисных компаний.
         // Описание: Получение списка всех сервисных компаний. Возвращает данные о компаниях с их идентификаторами и названиями.
-        // Возвращаемое значение: Возвращается HTTP 200 с JSON содержащим список сервисных компаний.
+        // Возвращаемое значение: Возвращается HTTP 200 с JSON содержащим список сервисных компаний. 
 
     }
 }

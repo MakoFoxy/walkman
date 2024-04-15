@@ -25,11 +25,11 @@ namespace Player.WebApi.Controllers.v1.Dictionary
 
         [HttpGet("{id:Guid}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<OrganizationModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query { Id = id }, cancellationToken); //Описание: Метод асинхронно возвращает детальную информацию об организации по её идентификатору. Возвращаемый объект OrganizationModel содержит данные организации, такие как Id, Name, Bin, Address, Bank, Iik, Phone, а также связанные данные о клиентах и объектах через вложенные запросы к другим таблицам.
+        public async Task<OrganizationModel> Get(Guid id, CancellationToken cancellationToken) => await _mediator.Send(new Details.Query { Id = id }, cancellationToken); //Описание: Метод асинхронно возвращает детальную информацию об организации по её идентификатору. Возвращаемый объект OrganizationModel содержит данные организации, такие как Id, Name, Bin, Address, Bank, Iik, Phone, а также связанные данные о клиентах и объектах через вложенные запросы к другим таблицам. Этот метод обрабатывает запрос на получение информации об определённой организации по её идентификатору (System.Guid). Метод возвращает детализированную информацию об организации в виде объекта Player.BusinessLogic.Features.Organizations.Models.OrganizationModel, который содержит такие данные, как идентификатор, имя, BIN (Бизнес Идентификационный Номер), адрес, банковские данные, телефон и другие сопутствующие сведения.
 
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<BaseFilterResult<List.OrganizationShortInfoModel>> Get([FromQuery] BaseFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); //Описание: Метод асинхронно возвращает список организаций с пагинацией. Использует фильтры для лимитирования и смещения в запросе. Возвращает данные организаций включая Id, Name, Bin, Address, Bank, Iik, Phone, и количество пользователей (UserCount), ассоциированных с каждой организацией.
+        public async Task<BaseFilterResult<List.OrganizationShortInfoModel>> Get([FromQuery] BaseFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); //Описание: Метод асинхронно возвращает список организаций с пагинацией. Использует фильтры для лимитирования и смещения в запросе. Возвращает данные организаций включая Id, Name, Bin, Address, Bank, Iik, Phone, и количество пользователей (UserCount), ассоциированных с каждой организацией.Возвращает BaseFilterResult типа OrganizationShortInfoModel, который включает в себя базовую информацию о каждой организации, такую как ID, название, BIN, адрес, данные банковского счета и количество клиентов в каждой организации. Данные возвращаются в формате JSON.
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -37,6 +37,8 @@ namespace Player.WebApi.Controllers.v1.Dictionary
         {
             await _mediator.Send(new Create.Command { OrganizationModel = model }, cancellationToken);
             return Ok(); //Этот метод асинхронно обрабатывает POST запрос на создание новой организации, принимая модель данных организации и токен отмены операции. По завершении обработки запроса, если все операции прошли успешно, метод возвращает StatusCodeResult с HTTP статусом 200, что означает успешное выполнение запроса без возврата каких-либо данных в теле ответа.
+
+            //Метод Post: Этот метод используется для создания новой организации. В запросе передаются данные новой организации, включая адрес, банк, БИН (бизнес-идентификатор), ИИК (индивидуальный идентификационный код), имя, телефон и пользовательские данные. Метод выполняет вставку данных организации и связанных с ней пользователей в базу данных. Ответ сервера указывает на успешное выполнение операции, возвращая статус код 200, что означает успешное создание данных.
         }
 
         [HttpPut]

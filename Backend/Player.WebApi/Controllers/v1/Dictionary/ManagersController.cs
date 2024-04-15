@@ -43,6 +43,7 @@ namespace Player.WebApi.Controllers.v1.Dictionary
             await _mediator.Send(command, cancellationToken);
             return Ok();
             //await _mediator.Send(command, cancellationToken);: Здесь используется шаблон Mediator для отправки command на обработку. Mediator упрощает разработку, разделяя логику создания объектов и их обработку. Это позволяет уменьшить зависимости между компонентами и облегчает тестирование. Метод Send асинхронно отправляет команду на обработку и ожидает её завершения.
+            //    Метод обрабатывает HTTP POST запрос для создания нового менеджера. Перед созданием проверяется наличие необходимых разрешений у пользователя.
         }
 
         [HttpPut]
