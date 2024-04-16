@@ -31,7 +31,8 @@ namespace Player.WebApi.Controllers.v1.Dictionary
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllManagers, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<BaseFilterResult<List.ManagerShortInfoModel>> Get([FromQuery] BaseFilterModel model, CancellationToken cancellationToken = default) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken);
-
+        // GetManagers или аналогичный, для получения списка менеджеров.
+        // Результат: Возвращается статус ответа HTTP 403 (Forbidden) из-за отсутствия у пользователя разрешения ReadAllManagers.
         [HttpPost]
         [Authorize(Policy = Permission.CreateManager, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
