@@ -30,7 +30,7 @@ namespace Player.BusinessLogic.Features.Music
             public async Task<MusicFilterResult> Handle(Query request, CancellationToken cancellationToken)
             {
                 var result = new MusicFilterResult
-                {
+                { //оздается объект MusicFilterResult, который будет хранить результаты запроса, включая информацию о пагинации и фильтрах (номер страницы, количество элементов на странице, ID жанра и ID подборки).
                     Page = request.Filter?.Page,
                     ItemsPerPage = request.Filter?.ItemsPerPage,
                     GenreId = request.Filter?.GenreId,
@@ -38,25 +38,25 @@ namespace Player.BusinessLogic.Features.Music
                 };
 
                 var query = _context.MusicTracks
-                    .Where(mt => mt.TrackType.Code == TrackType.Music);
+                    .Where(mt => mt.TrackType.Code == TrackType.Music); //Исходный запрос к таблице MusicTracks фильтруется так, чтобы включать только те треки, которые относятся к типу Music.
 
-                if (result.GenreId != Guid.Empty && result.GenreId.HasValue)
+                if (result.GenreId != Guid.Empty && result.GenreId.HasValue) //Если задан фильтр по жанру (GenreId), запрос дополнительно фильтруется по наличию жанра с соответствующим ID.
                 {
                     query = query.Where(mt => mt.Genres.Any(g => g.Genre.Id == result.GenreId));
                 }
 
-                if (result.SelectionId != Guid.Empty && result.SelectionId.HasValue)
+                if (result.SelectionId != Guid.Empty && result.SelectionId.HasValue) //Если задан фильтр по подборке (SelectionId), запрос дополнительно фильтруется по наличию подборки с соответствующим ID и результаты сортируются по индексу треков в подборке.
                 {
                     query = query.Where(mt => mt.Selections.Any(s => s.Selection.Id == result.SelectionId))
                         .OrderBy(mt => mt.Selections.Select(s => s.Index));
                 }
 
                 result.Result = await query
-                    .GetPagedQuery(result.Page, result.ItemsPerPage)
-                    .ProjectTo<MusicModel>(_mapper.ConfigurationProvider).ToListAsync(cancellationToken);
-                result.TotalItems = await query.CountAsync(cancellationToken);
+                    .GetPagedQuery(result.Page, result.ItemsPerPage) //Запрос выполняется с использованием пагинации (GetPagedQuery), что позволяет вернуть только требуемый диапазон результатов на запрашиваемой странице.
+                    .ProjectTo<MusicModel>(_mapper.ConfigurationProvider).ToListAsync(cancellationToken); //Результаты запроса преобразуются в список объектов MusicModel с помощью AutoMapper (ProjectTo).
+                result.TotalItems = await query.CountAsync(cancellationToken); //    Выполняется подсчет общего количества треков, соответствующих заданным фильтрам, что позволяет клиенту корректно реализовать пагинацию на пользовательском интерфейсе.
 
-                return result;
+                return result; //    Возвращается объект MusicFilterResult, содержащий отфильтрованный и постранично организованный список музыкальных треков, а также общее количество треков, удовлетворяющих условиям фильтрации.
 
                 //Это основная логика обработки запроса на получение музыки. В методе Handle формируется LINQ запрос к базе данных, который может включать фильтрацию по жанру и подборкам (селекциям). Затем результаты фильтруются и преобразуются в модели MusicModel, а также происходит пагинация результатов. В конце метода возвращается объект MusicFilterResult, содержащий отфильтрованный и страницы список треков, а также общее количество треков, удовлетворяющих критериям фильтрации.
             }
@@ -87,6 +87,7 @@ namespace Player.BusinessLogic.Features.Music
             public Guid? GenreId { get; set; }
             public Guid? SelectionId { get; set; }
         }
+        //MusicFilterResult наследуется от BaseFilterResult<MusicModel>, что позволяет использовать обобщённые методы и свойства для управления результатами запросов с учётом пагинации и количества элементов. MusicFilterModel используется в Query для передачи параметров фильтрации в запросе.
         //    MusicModel определяет структуру данных музыкального трека, который будет возвращен в ответе.
         // Query представляет собой запрос, который включает в себя параметры фильтрации MusicFilterModel.
         // MusicFilterModel содержит критерии для фильтрации музыкальных треков, такие как GenreId и SelectionId.

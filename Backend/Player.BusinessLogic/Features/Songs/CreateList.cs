@@ -20,24 +20,33 @@ namespace Player.BusinessLogic.Features.Songs
         public class PreProcessor : IRequestPreProcessor<Command>
         {
             //Это класс предварительной обработки для команды Command. Он используется для сохранения потоков песен, полученных в команде, в файлы перед тем, как основной обработчик (Handler) начнет свою работу.
-            private readonly IConfiguration _configuration;
+            private readonly IConfiguration _configuration; //В классе используется зависимость IConfiguration, которая инжектируется через конструктор. _configuration позволяет доступ к конфигурационным данным приложения.
 
             public PreProcessor(IConfiguration configuration)
             {
-                _configuration = configuration;
+                _configuration = configuration; //В конструкторе _configuration присваивается полученный экземпляр конфигурации.
             }
 
             public async Task Process(Command command, CancellationToken cancellationToken)
-            {
-                var basePath = _configuration.GetValue<string>("Player:SongsPath");
+            { //Этот метод асинхронный, что позволяет выполнять операции ввода-вывода без блокировки основного потока выполнения. Метод принимает параметр command, который содержит потоки музыкальных файлов для загрузки, и cancellationToken для управления отменой операции.
+                var basePath = _configuration.GetValue<string>("Player:SongsPath"); //    Из конфигурации извлекается значение basePath по ключу "Player:SongsPath". Это базовый путь, куда будут сохраняться файлы.
 
-                foreach (var musicFile in command.SongStreams)
+                foreach (var musicFile in command.SongStreams) //Цикл foreach перебирает все музыкальные файлы в command.SongStreams.
                 {
-                    await using var fileStream = File.Create(Path.Combine(basePath, musicFile.Name));
-                    var memory = new byte[musicFile.Stream.Length];
-                    await musicFile.Stream.ReadAsync(memory, 0, memory.Length, cancellationToken);
-                    await fileStream.WriteAsync(memory, 0, memory.Length, cancellationToken);
-                    //Метод загружает музыкальные файлы из потоков, содержащихся в команде, на сервер или в специфическое место на диске.
+                    try
+                    {
+                        await using var fileStream = File.Create(Path.Combine(basePath, musicFile.Name)); //Для каждого файла создается поток fileStream с использованием File.Create, который создает или перезаписывает файл по указанному пути, комбинируя basePath и имя файла (musicFile.Name).
+                        var memory = new byte[musicFile.Stream.Length]; //Для чтения данных из исходного потока музыкального файла в память создается массив байтов memory размером с длину потока musicFile.Stream.Length.
+                        await musicFile.Stream.ReadAsync(memory, 0, memory.Length, cancellationToken); //Содержимое исходного потока асинхронно читается в массив memory.
+                        await fileStream.WriteAsync(memory, 0, memory.Length, cancellationToken); //Содержимое memory затем асинхронно записывается в fileStream, тем самым сохраняя файл на диск.
+
+                        //Метод загружает музыкальные файлы из потоков, содержащихся в команде, на сервер или в специфическое место на диске.
+                    }
+                    catch (Exception ex)
+                    {
+                        // Логирование или обработка исключения
+                        Console.WriteLine($"Error processing file {musicFile.Name}: {ex.Message}");
+                    }
                 }
             }
         }
@@ -63,39 +72,43 @@ namespace Player.BusinessLogic.Features.Songs
 
             public async Task<Unit> Handle(Command command, CancellationToken cancellationToken)
             {
-                var basePath = _configuration.GetValue<string>("Player:SongsPath");
+                var basePath = _configuration.GetValue<string>("Player:SongsPath"); //    basePath получает путь к директории, где будут сохраняться музыкальные файлы, из конфигурации приложения.
 
                 var maxIndex = await _context.MusicTracks.OrderByDescending(mt => mt.Index).Select(mt => mt.Index)
-                    .FirstOrDefaultAsync(cancellationToken);
+                    .FirstOrDefaultAsync(cancellationToken); //    Из базы данных извлекается максимальный индекс существующих музыкальных треков для определения индекса новых треков.
                 var musicTrackTypeId =
                     await _context.TrackTypes.Where(tt => tt.Code == TrackType.Music)
                         .Select(tt => tt.Id)
-                        .SingleAsync(cancellationToken);
-                var currentUser = await _userManager.GetCurrentUser(cancellationToken);
+                        .SingleAsync(cancellationToken); //    Получение идентификатора типа трека, который соответствует коду 'Music', для правильного категоризирования добавляемых треков.
+                var currentUser = await _userManager.GetCurrentUser(cancellationToken); //    Используя менеджер пользователей (_userManager), извлекается информация о текущем пользователе, который выполняет операцию.
 
-                var genreId = command.SongStreams.First().Genre.Id;
+                var genreId = command.SongStreams.First().Genre.Id; //    Из первого элемента в списке потоков музыкальных файлов (SongStreams) извлекается Id жанра.
 
                 var musicTracks = command.SongStreams
-                    .Select(ss => new SimpleDto
+                    .Select(ss => new SimpleDto //    Создание списка объектов SimpleDto, который включает идентификатор и путь к файлу для каждого музыкального трека из команды.
                     {
                         Id = ss.MusicTrackId ?? Guid.Empty,
                         Name = Path.Combine(basePath, ss.Name),
                     })
                     .ToList();
                 var musicTracksForInsert = await _musicTrackCreator.CreateMusicTracks(new MusicTrackCreatorData
-                {
-                    Tracks = musicTracks,
-                    MaxIndex = maxIndex,
-                    BasePath = basePath,
-                    MusicTrackTypeId = musicTrackTypeId,
-                    GenreId = genreId,
-                    UserId = currentUser.Id,
+                { //    Вызывается сервис _musicTrackCreator для создания объектов музыкальных треков, передавая данные, включая полученные треки, максимальный индекс, базовый путь, тип трека, жанр и идентификатор пользователя. 
+                    Tracks = musicTracks, //    Для каждого трека из списка Tracks создается новый объект MusicTrack. Поля этого объекта инициализируются соответствующими значениями из MusicTrackCreatorData.
+                    MaxIndex = maxIndex, //Index: Устанавливается индекс для музыкального трека, начиная с maxIndex + 1 для первого трека, увеличиваясь для каждого следующего.
+                    BasePath = basePath, //BasePath: Базовый путь, который может использоваться для указания местоположения файла музыкального трека.
+                    MusicTrackTypeId = musicTrackTypeId, //MusicTrackTypeId: Тип трека, установленный как ID для музыкальных треков.
+                    GenreId = genreId, //GenreId: Идентификатор жанра, который связывается с каждым треком, возможно, через отношение многие-ко-многим с использованием MusicTrackGenre.
+                    UserId = currentUser.Id, //UserId: Идентификатор пользователя, который создает эти треки.
+
+                    //В данном контексте MusicTrackCreatorData используется как DTO (Data Transfer Object), который предоставляет все необходимые данные для создания объектов MusicTrack. Этот объект передается в сервис _musicTrackCreator, который отвечает за создание и инициализацию экземпляров MusicTrack в базе данных.
+                    //Когда MusicTrackCreatorData передается в _musicTrackCreator.CreateMusicTracks, этот метод обрабатывает следующие действия:     Для каждого трека из списка Tracks создается новый объект MusicTrack. Поля этого объекта инициализируются соответствующими значениями из MusicTrackCreatorData.
+                    //Index: Устанавливается индекс для музыкального трека, начиная с maxIndex + 1 для первого трека, увеличиваясь для каждого следующего.     Genres, MusicHistories, Playlists, и Selections являются коллекциями, которые могут быть инициализированы или обновлены в этом процессе, в зависимости от бизнес-логики, определенной в _musicTrackCreator.
                 });
 
-                _context.MusicTracks.AddRange(musicTracksForInsert);
-                await _context.SaveChangesAsync(cancellationToken);
+                _context.MusicTracks.AddRange(musicTracksForInsert); //    В контекст базы данных добавляются созданные музыкальные треки.
+                await _context.SaveChangesAsync(cancellationToken); //    Вызывается SaveChangesAsync для сохранения изменений в базе данных.
 
-                return Unit.Value;
+                return Unit.Value; //    Метод возвращает Unit.Value, что является стандартным возвращаемым значением для обработчиков MediatR, которые не возвращают результат.
                 //Основной метод обработчика. Он использует данные из команды для создания новых музыкальных треков и сохранения их в базе данных.
                 //Метод Handle в обработчике сначала определяет базовый путь для музыкальных треков из конфигурации. Затем он собирает информацию о треках (включая метаданные и пути к файлам) и использует сервис IMusicTrackCreator для создания записей музыкальных треков в базе данных. Каждый новый музыкальный трек связывается с определенным жанром, пользователем (обычно автором или загрузившим) и типом трека (в данном случае музыка).
             }

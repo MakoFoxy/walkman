@@ -29,9 +29,12 @@ namespace Player.BusinessLogic.Features.Genres
                 //Этот метод асинхронно обрабатывает запрос на получение списка жанров, используя контекст базы данных. ProjectTo<GenreModel> используется для проецирования каждой сущности жанра из базы данных непосредственно в объект GenreModel, что упрощает преобразование и избавляет от необходимости писать много кода для маппинга. Метод ToListAsync асинхронно преобразует результаты запроса в список.
             }
         }
- 
+
         public class GenreModel : SimpleDto
         {
+            //Содержание модели GenreModel:
+            // Id (GUID): Уникальный идентификатор жанра.
+            // Name (string): Название жанра.
         }
 
         public class Query : IRequest<List<GenreModel>>

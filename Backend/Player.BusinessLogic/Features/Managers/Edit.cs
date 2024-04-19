@@ -25,27 +25,28 @@ namespace Player.BusinessLogic.Features.Managers
             {
                 var managerModel = request.Manager;
 
-                var manager = await _context.Managers.Where(m => m.Id == managerModel.Id)
+                var manager = await _context.Managers.Where(m => m.Id == managerModel.Id) //Используя Entity Framework, код выполняет поиск менеджера по идентификатору managerModel.Id.
                     .Include(m => m.User)
                     .ThenInclude(u => u.Objects)
-                    .SingleAsync(cancellationToken);
+                    .SingleAsync(cancellationToken);  //Загружает связанного пользователя (User) и связанные объекты (Objects) с помощью методов Include и ThenInclude.
 
                 manager.User.FirstName = managerModel.FirstName;
                 manager.User.LastName = managerModel.LastName;
                 manager.User.SecondName = managerModel.SecondName;
                 manager.User.Email = managerModel.Email;
                 manager.User.PhoneNumber = managerModel.PhoneNumber;
-                manager.User.RoleId = managerModel.Role.Id;
+                manager.User.RoleId = managerModel.Role.Id; //Обновляет основные атрибуты пользователя, такие как имя, фамилия, отчество, электронная почта и номер телефона, используя данные из managerModel. Обновляет роль пользователя, если она предоставлена в запросе.
 
                 if (!string.IsNullOrWhiteSpace(managerModel.Password))
                 {
-                    manager.User.Password = managerModel.Password;
+                    manager.User.Password = managerModel.Password; //    Если в запросе предоставлен пароль и он не пуст, обновляет пароль пользователя.
                 }
 
                 var userObjectsForRemove = manager.User.Objects
                     .Where(uo => !managerModel.Objects.Select(o => o.Id).Contains(uo.ObjectId));
+                //    Определяет, какие связи с объектами (UserObjects) необходимо удалить, основываясь на том, что их идентификаторы не включены в список идентификаторов объектов, предоставленных в managerModel.
+                _context.RemoveRange(userObjectsForRemove); // удалит по id из массива ненужные UserObjects и удалить с RemoveRange     Удаляет эти объекты из контекста базы данных с помощью RemoveRange.
 
-                _context.RemoveRange(userObjectsForRemove);
 
                 foreach (var modelObject in managerModel.Objects)
                 {
@@ -58,11 +59,12 @@ namespace Player.BusinessLogic.Features.Managers
                     {
                         UserId = manager.UserId,
                         ObjectId = modelObject.Id
+                        //    Для каждого объекта из managerModel, который еще не связан с пользователем, добавляет новую связь, создавая экземпляр UserObjects и добавляя его в контекст базы данных.
                     });
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
-                return Unit.Value;
+                return Unit.Value; //    Возвращает Unit.Value, что является стандартным способом указания на успешное выполнение команды в CQRS без возвращения конкретного результата.
 
                 //Асинхронный метод Handle принимает запрос Command, содержащий модель менеджера (ManagerModel), и токен отмены операции. Этот метод выполняет ряд операций по обновлению данных менеджера в базе данных.
                 // Внутри метода:
