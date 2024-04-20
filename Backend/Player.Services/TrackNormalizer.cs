@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Player.Services.Abstractions;
@@ -21,7 +20,6 @@ namespace Player.Services
         public void Normalize(string path)
         {//Этот метод запускает процесс нормализации для аудиотрека по заданному пути. Он использует внешнюю утилиту (обычно это MP3Gain или аналог), путь к которой определяется в файле конфигурации.
             _logger.LogTrace("Normalization for {Path} started", path);
-
             var mp3GainPath = _configuration.GetValue<string>("Player:Mp3GainPath");
             var mp3Gain = new Process
             {

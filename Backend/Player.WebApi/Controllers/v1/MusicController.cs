@@ -63,31 +63,33 @@ namespace Player.WebApi.Controllers.v1
           // Обработка загруженных данных и файла музыкального трека.
           // В случае успешной обработки, информация о треке добавляется в базу данных.
           //    Post: Этот метод принимает объект AddMusicModel и CancellationToken как параметры. AddMusicModel содержит данные, необходимые для добавления новой музыки, включая, возможно, метаданные и файл музыки. Основная задача этого метода — обработать загруженные данные и сохранить их в базе данных.
-            var genre = JsonConvert.DeserializeObject<SimpleDto>(Request.Form["genre"]); //Десериализация данных жанра: Используя JsonConvert.DeserializeObject<SimpleDto>, код десериализует JSON, содержащийся в форме запроса под ключом "genre", в объект SimpleDto. Этот объект представляет жанр музыкальной дорожки и используется для последующей обработки.
-            var musicTrackIdRaw = Request.Form["musicTrackId"]; //Извлечение и обработка идентификатора музыкальной дорожки: Код извлекает значение musicTrackId из формы запроса, которое представляет собой идентификатор музыкальной дорожки. Если в форме присутствует только одно значение для musicTrackId, код очищает его от кавычек и преобразует в Guid (глобальный уникальный идентификатор).
 
-            Guid? musicTrackId = null; //Инициализация musicTrackId: Сначала объявляется переменная musicTrackId типа Guid?, что означает, что она может хранить значение Guid или быть null. Переменная инициализируется значением null.
+            var genre = JsonConvert.DeserializeObject<SimpleDto>(Request.Form["genre"]);
+            var musicTrackIdRaw = Request.Form["musicTrackId"];
+            Guid? musicTrackId = null;
 
-            if (musicTrackIdRaw.Count == 1) //Проверка условия: Затем код проверяет, содержит ли musicTrackIdRaw ровно один элемент с помощью условия musicTrackIdRaw.Count == 1. Это условие гарантирует, что действия будут выполнены только если в musicTrackIdRaw находится точно один идентификатор.
+            if (musicTrackIdRaw.Count == 1)
             {
                 musicTrackId = Guid.Parse(musicTrackIdRaw[0].Replace("\"", string.Empty));
-                //Парсинг идентификатора: Если условие истинно, то код берет первый элемент массива (musicTrackIdRaw[0]), удаляет из него кавычки (что делает Replace("\"", string.Empty)), и затем преобразует полученную строку в Guid с помощью Guid.Parse(). Результат преобразования присваивается переменной musicTrackId.
             }
 
-            var files = model.MusicFiles.Files.Select(musicFile => new MusicFileModel
-            { //Обработка загруженных файлов: Затем код перебирает файлы, отправленные через форму, используя model.MusicFiles.Files. Для каждого файла он создает объект MusicFileModel, который включает:
-                Name = musicFile.FileName,
-                Stream = musicFile.OpenReadStream(),
-                Genre = genre,
-                MusicTrackId = musicTrackId,
-                //                 Name: Имя файла.
-                // Stream: Поток данных файла, который открывается для чтения.
-                // Genre: Объект жанра, полученный ранее.
-                // MusicTrackId: Идентификатор музыкальной дорожки, если он доступен.
-            }).ToList(); //Все созданные объекты MusicFileModel собираются в список.
+            foreach (var musicFile in model.MusicFiles.Files)
+            {
+                var musicFileModel = new MusicFileModel
+                {
+                    Name = musicFile.FileName,
+                    Stream = musicFile.OpenReadStream(),
+                    Genre = genre,
+                    MusicTrackId = musicTrackId
+                };
 
-            await _mediator.Send(new CreateList.Command { SongStreams = files }, cancellationToken); //Отправка команды через Mediator: После создания списка файлов, этот список упаковывается в команду CreateList.Command, которая отправляется для обработки через шину команд Mediator. Это асинхронный вызов, который передает команду в систему для обработки, например, для сохранения файлов в базу данных или файловую систему.
+                // Обрабатываем и отправляем каждый файл отдельно
+                await _mediator.Send(new CreateList.Command { SongStreams = new List<MusicFileModel> { musicFileModel } }, cancellationToken);
+            }
+
             return Ok(); //Возвращение результата: По завершении обработки команды, метод возвращает HTTP статус 200 OK, что означает успешное выполнение запроса.
+
+            //Возвращение результата: По завершении обработки команды, метод возвращает HTTP статус 200 OK, что означает успешное выполнение запроса.
             //Этот метод принимает музыкальные файлы, жанр и идентификатор трека, и добавляет новые музыкальные треки. Используется для создания новых записей музыки в системе. Требует наличия разрешения CreateMusic.
         }
     }

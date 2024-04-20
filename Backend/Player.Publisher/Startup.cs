@@ -176,7 +176,7 @@ namespace Player.Publisher
             }
 
             app.UseCors(builder => builder.AllowAnyMethod()
-                .WithOrigins("http://localhost:8080", "https://dev.909.kz", "https://909.kz")
+                .WithOrigins("http://localhost:8082", "https://dev.909.kz", "https://909.kz")
                 .AllowCredentials()
                 .AllowAnyHeader());
             //Настраивает политику CORS (Cross-Origin Resource Sharing), разрешая запросы с определенных источников (доменов), все методы (GET, POST и т.д.) и заголовки, а также поддержку учетных данных (куки, авторизационные заголовки).

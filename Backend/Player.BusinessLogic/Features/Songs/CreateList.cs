@@ -29,25 +29,46 @@ namespace Player.BusinessLogic.Features.Songs
 
             public async Task Process(Command command, CancellationToken cancellationToken)
             { //Этот метод асинхронный, что позволяет выполнять операции ввода-вывода без блокировки основного потока выполнения. Метод принимает параметр command, который содержит потоки музыкальных файлов для загрузки, и cancellationToken для управления отменой операции.
-                var basePath = _configuration.GetValue<string>("Player:SongsPath"); //    Из конфигурации извлекается значение basePath по ключу "Player:SongsPath". Это базовый путь, куда будут сохраняться файлы.
+                var basePath = _configuration.GetValue<string>("Player:SongsPath");
+                SemaphoreSlim streamLock = new SemaphoreSlim(1, 1);  // Создаем семафор для асинхронной блокировки
 
-                foreach (var musicFile in command.SongStreams) //Цикл foreach перебирает все музыкальные файлы в command.SongStreams.
+                foreach (var musicFile in command.SongStreams)
                 {
+                    await streamLock.WaitAsync();  // Блокируем поток до получения доступа
+                    var fullPath = Path.Combine(basePath, musicFile.Name);
+                    if (File.Exists(fullPath))
+                    {
+                        streamLock.Release();  // Освобождаем блокировку если файл существует
+                        continue;
+                    }
+
                     try
                     {
-                        await using var fileStream = File.Create(Path.Combine(basePath, musicFile.Name)); //Для каждого файла создается поток fileStream с использованием File.Create, который создает или перезаписывает файл по указанному пути, комбинируя basePath и имя файла (musicFile.Name).
-                        var memory = new byte[musicFile.Stream.Length]; //Для чтения данных из исходного потока музыкального файла в память создается массив байтов memory размером с длину потока musicFile.Stream.Length.
-                        await musicFile.Stream.ReadAsync(memory, 0, memory.Length, cancellationToken); //Содержимое исходного потока асинхронно читается в массив memory.
-                        await fileStream.WriteAsync(memory, 0, memory.Length, cancellationToken); //Содержимое memory затем асинхронно записывается в fileStream, тем самым сохраняя файл на диск.
+                        using (var buffer = new MemoryStream())
+                        {
+                            await musicFile.Stream.CopyToAsync(buffer, cancellationToken);  // Копирование в буфер
+                            buffer.Seek(0, SeekOrigin.Begin);  // Переходим в начало потока буфера
 
-                        //Метод загружает музыкальные файлы из потоков, содержащихся в команде, на сервер или в специфическое место на диске.
+                            using (var targetStream = File.Create(fullPath))  // Создаем файл
+                            {
+                                await buffer.CopyToAsync(targetStream, cancellationToken);  // Копирование буфера в файл
+                            }
+                            Console.WriteLine($"File {musicFile.Name} processed and saved successfully.");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        // Логирование или обработка исключения
                         Console.WriteLine($"Error processing file {musicFile.Name}: {ex.Message}");
+                        Console.WriteLine($"Exception type: {ex.GetType()}");
+                        Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    }
+                    finally
+                    {
+                        streamLock.Release();  // Освобождаем блокировку после обработки файла
                     }
                 }
+
+
             }
         }
 

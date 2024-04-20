@@ -24,37 +24,71 @@ namespace Player.Services
 
         public async Task<List<MusicTrack>> CreateMusicTracks(MusicTrackCreatorData creatorData)
         {
+            // try
+            // {
+            //     // Пример операций, которые могут привести к ошибке
+            //     foreach (var track in creatorData.Tracks)
+            //     {
+            //         // Логирование с проверкой
+            //         if (int.TryParse(track.SomeNumericField.ToString(), out int numericValue))
+            //         {
+            //             Console.WriteLine("Processing track with ID: {0}", numericValue);
+            //         }
+            //         else
+            //         {
+            //             Console.WriteLine("Invalid data for track ID: {0}", track.SomeNumericField);
+            //         }
+
+            //         // Продолжение обработки трека...
+            //     }
+            // }
+            // catch (Exception ex)
+            // {
+            //     // Логируем более безопасно, избегая форматирования строк, которое может вызвать ошибки
+            //     Console.WriteLine($"Error processing tracks: {ex.Message}");
+            // }
             //Это асинхронный метод, который принимает данные для создания музыкальных треков (MusicTrackCreatorData) и возвращает список созданных музыкальных треков (List<MusicTrack>).
             var musicTracks = new List<MusicTrack>(creatorData.Tracks.Count);
-            Console.WriteLine("musicTracks11 ", musicTracks);
+            Console.WriteLine($"musicTracks11  {musicTracks}");
 
             using var sha256 = SHA256.Create();
-            Console.WriteLine("sha256 ", sha256);
+            Console.WriteLine($"sha256  {sha256}");
             foreach (var file in creatorData.Tracks.Select(f => new SimpleDto
             {
                 Id = f.Id,
                 Name = Path.Combine(creatorData.BasePath, f.Name)
 
             }))
-
             {
-                Console.WriteLine("Path.Combine(creatorData.BasePath, f.Name) ", file.Name);
-                Console.WriteLine("Id = f.Id ", file.Id);
-                try
-                {
-                    _trackNormalizer.Normalize(file.Name); //Каждый трек нормализуется для обеспечения согласованного уровня громкости.
-                    Console.WriteLine("Normalization for {Path} started", file.Name);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error normalizing file.Name {file.Name}, ex.Message {ex.Message}");
-                    continue; // Пропускаем текущий файл и продолжаем обработку следующего
-                }
-                var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); //var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); Используется FFmpeg для получения информации о медиафайле, включая длительность трека.
-                Console.WriteLine("mediaInfo ", mediaInfo);
-
+                Console.WriteLine($"Path.Combine(creatorData.BasePath, f.Name) {file.Name}");
+                Console.WriteLine($"Id = f.Id {file.Id}");
+                // IMediaInfo mediaInfo;
+                // try
+                // {
+                _trackNormalizer.Normalize(file.Name); //Каждый трек нормализуется для обеспечения согласованного уровня громкости.
+                var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); //var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); Используется FFmpeg для получения информации о медиафайле, включая длительность трека.              
+                Console.WriteLine($"Normalization _trackNormalizer {file.Name}");
+                Console.WriteLine($"mediaInfo  {mediaInfo})");
+                // }
+                // catch (Exception ex)
+                // {
+                //     Console.WriteLine("Error normalizing file {FileName}", ex.Message);
+                //     Console.WriteLine("Error mediaInfo {mediaInfo}", ex.Message);
+                //     continue;
+                // }
+                // IMediaInfo mediaInfo;
+                // try
+                // {
+                //     mediaInfo = await FFmpeg.GetMediaInfo(file.Name); //var mediaInfo = await FFmpeg.GetMediaInfo(file.Name); Используется FFmpeg для получения информации о медиафайле, включая длительность трека.                
+                //     Console.WriteLine($"mediaInfo  {mediaInfo})");
+                // }
+                // catch (Exception ex)
+                // {
+                //     Console.WriteLine("Error mediaInfo {mediaInfo}", ex.Message);
+                //     continue;
+                // }
                 var hashString = new StringBuilder(); //Для каждого файла вычисляется его хеш SHA-256, который затем преобразуется в строку.
-                Console.WriteLine("hashString ", hashString);
+                Console.WriteLine($"hashString {hashString}");
 
                 await using (var stream = File.OpenRead(file.Name))
                 {
@@ -81,8 +115,8 @@ namespace Player.Services
                     UploaderId = creatorData.UserId,
                     Hash = hashString.ToString(),
                 };
-                Console.WriteLine("musicTrack Id " + musicTrack.Id);
-                Console.WriteLine("musicTrack FilePath " + musicTrack.FilePath);
+                Console.WriteLine($"musicTrack Id  {musicTrack.Id}");
+                Console.WriteLine($"musicTrack FilePath {musicTrack.FilePath}");
 
                 musicTrack.Genres.Add(new MusicTrackGenre
                 {//К каждому музыкальному треку добавляется жанр.

@@ -60,7 +60,6 @@ namespace Player.WebApi
         public void ConfigureServices(IServiceCollection services)
         { //Этот метод используется для добавления сервисов в контейнер DI и настройки конфигурации:
             IdentityModelEventSource.ShowPII = true; //    Разрешает отображение личной идентифицирующей информации в логах для упрощения отладки.
-
             var appSettings = Configuration["Player:Jwt:Key"];
             var key = Encoding.ASCII.GetBytes(appSettings); //    Извлекает секретный ключ JWT из конфигурации и преобразует его в массив байтов.
             services.AddAuthentication(x =>
@@ -105,7 +104,7 @@ namespace Player.WebApi
                 {
                     option.Conventions.Add(new RouteTokenTransformerConvention(
                         new SlugifyParameterTransformer()));
-                }) 
+                })
                 .AddNewtonsoftJson(option =>
                 {
                     option.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
