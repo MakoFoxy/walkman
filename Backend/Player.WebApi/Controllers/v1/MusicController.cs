@@ -31,7 +31,7 @@ namespace Player.WebApi.Controllers.v1
         [HttpGet]
         [Authorize(Policy = Permission.ReadAllMusic, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         //Этот метод возвращает отфильтрованный список музыкальных треков на основе параметров в модели MusicFilterModel. Он требует, чтобы пользователь имел разрешение ReadAllMusic.
-        public async Task<List.MusicFilterResult> Get([FromQuery] List.MusicFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); //Описание: Получение списка музыкальных треков с фильтрацией. Возвращает: Player.BusinessLogic.Features.Music.List+MusicFilterResult, результаты фильтрации музыкальных треков, включая детали треков и жанры. Метод Get возвращает список музыкальных треков с фильтрацией по страницам и другим критериям, таким как жанр и подборка. Возвращаемая модель MusicFilterResult включает в себя детали каждого трека, такие как ID, имя, длина, путь к файлу и связанные жанры.
+        public async Task<List.MusicFilterResult> Get([FromQuery] List.MusicFilterModel model, CancellationToken cancellationToken) => await _mediator.Send(new List.Query { Filter = model }, cancellationToken); //Описание: Получение списка музыкальных треков с фильтрацией. Возвращает: Player.BusinessLogic.Features.Music.List+MusicFilterResult, результаты фильтрации музыкальных треков, включая детали треков и жанры. Метод Get возвращает список музыкальных треков с фильтрацией по страницам и другим критериям, таким как жанр и подборка. Возвращаемая модель MusicFilterResult включает в себя детали каждого трека, такие как ID, имя, длина, путь к файлу и связанные жанры.  //Возвращаемый результат: MusicFilterResult, который включает в себя список музыкальных треков, включая информацию о жанрах (MusicTrackGenres) и другие атрибуты треков.
 
         [HttpGet("all")]
         [Authorize(Policy = Permission.ReadAllMusic, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -44,6 +44,7 @@ namespace Player.WebApi.Controllers.v1
 
             return result.Result;
             //Этот метод возвращает список всех музыкальных треков без фильтрации. Также требуется разрешение ReadAllMusic.
+
         }
 
         [HttpGet("download")]
@@ -53,7 +54,7 @@ namespace Player.WebApi.Controllers.v1
         {
             var response = await _mediator.Send(model, cancellationToken);
             return File(response.TrackStream, $"audio/{response.TrackType}", response.TrackName);
-            //Этот метод позволяет скачать музыкальный трек. В текущей реализации закомментировано требование авторизации, что указывается в комментарии TODO как необходимость добавления.
+            //Этот метод позволяет скачать музыкальный трек. В текущей реализации закомментировано требование авторизации, что указывается в комментарии TODO как необходимость добавления.Возвращаемый результат: FileStreamResult, который является файловым потоком для скачивания. Информация о файле, включая путь к файлу (TrackPath), имя (TrackName) и тип файла (TrackType), извлекается из базы данных перед отправкой файла.
         }
 
         [HttpPost]

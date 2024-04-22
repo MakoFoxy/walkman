@@ -24,9 +24,11 @@ namespace Player.BusinessLogic.Features.Music
             }
 
             public async Task<Response> Handle(Query query, CancellationToken cancellationToken)
-            {
-                var basePath = _configuration.GetValue<string>("Player:SongsPath");
-                var response = await _context.MusicTracks
+            {                //Асинхронный метод Handle принимает запрос Query, содержащий идентификатор музыкального трека, и токен отмены. Он отвечает за извлечение информации о треке из базы данных и подготовку ответа Response.
+
+                var basePath = _configuration.GetValue<string>("Player:SongsPath"); //basePath получает путь к директории с музыкальными треками из конфигурации приложения.
+
+                var response = await _context.MusicTracks   //Запрос к базе данных извлекает информацию о треке по его идентификатору и формирует ответ.
                     .Where(mt => mt.Id == query.Id)
                     .Select(mt => new Response
                     {
@@ -36,16 +38,8 @@ namespace Player.BusinessLogic.Features.Music
                     })
                     .SingleAsync(cancellationToken);
 
-                response.TrackStream = File.OpenRead(Path.Combine(basePath, response.TrackPath));
+                response.TrackStream = File.OpenRead(Path.Combine(basePath, response.TrackPath));  //Файл трека открывается на чтение, и поток файла (TrackStream) включается в ответ.
                 return response;
-
-                //Асинхронный метод Handle принимает запрос Query, содержащий идентификатор музыкального трека, и токен отмены. Он отвечает за извлечение информации о треке из базы данных и подготовку ответа Response.
-
-                // Внутри метода:
-
-                //     basePath получает путь к директории с музыкальными треками из конфигурации приложения.
-                //     Запрос к базе данных извлекает информацию о треке по его идентификатору и формирует ответ.
-                //     Файл трека открывается на чтение, и поток файла (TrackStream) включается в ответ.
             }
         }
 
