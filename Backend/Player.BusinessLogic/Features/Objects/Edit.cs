@@ -76,14 +76,34 @@ namespace Player.BusinessLogic.Features.Objects
                     Phone = objectInfoModel.ResponsiblePersonTwo.Phone,
                 };
                 objectInfo.FreeDays = objectInfoModel.FreeDays;
-                objectInfo.Selections = objectInfoModel.Selections.Select(s => new ObjectSelection
-                {
-                    Object = objectInfo,
-                    SelectionId = s.Id
-                }).ToList();
                 objectInfo.MaxAdvertBlockInSeconds = objectInfoModel.MaxAdvertBlockInSeconds;
 
-                await _context.SaveChangesAsync(cancellationToken);
+
+                // // Сначала очистите все текущие подборки, если есть изменения в подборках
+                // if (objectInfoModel.Selections.Any(s => s.IsSelected))
+                // {
+                //     _context.ObjectSelections.RemoveRange(objectInfo.Selections);
+                //     await _context.SaveChangesAsync(cancellationToken);
+                // }
+
+
+                // Теперь добавьте только те подборки, которые выбраны
+                var selectedSelections = objectInfoModel.Selections
+                    .Where(s => s.IsSelected)
+                    .Select(s => new ObjectSelection
+                    {
+                        Object = objectInfo,
+                        SelectionId = s.Id,
+                        IsSelected = s.IsSelected
+                    }).ToList();
+
+                if (selectedSelections.Any())
+                {
+                    objectInfo.Selections = selectedSelections;
+                    // await _context.SaveChangesAsync(cancellationToken);
+                }
+
+                await _context.SaveChangesAsync(cancellationToken); // Сохранение новых связей и других изменений
                 await _context.CommitTransactionAsync(cancellationToken);
                 await _context.BeginTransactionAsync(cancellationToken);
 
