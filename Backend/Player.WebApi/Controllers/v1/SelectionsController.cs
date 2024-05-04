@@ -53,6 +53,7 @@ namespace Player.WebApi.Controllers.v1
             return response.Result;
         }
 
+
         [HttpPost]
         [Authorize(Policy = Permission.CreateSelection, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> Post([FromBody] UpdateSelectionModel model, CancellationToken token)

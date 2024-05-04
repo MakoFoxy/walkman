@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,8 @@ using Player.DataAccess;
 using Player.Domain;
 using Player.DTOs;
 using Player.Services.Abstractions;
+using System.IO;
+using System.IO.Compression;
 
 namespace Player.BusinessLogic.Features.Objects
 {
@@ -18,6 +21,8 @@ namespace Player.BusinessLogic.Features.Objects
         {
             private readonly PlayerContext _context;
             private readonly IMediaPlanExcelReportCreator _mediaPlanExcelReportCreator;
+            private List<TrackModel> adverts;
+
 
             public Handler(PlayerContext context, IMediaPlanExcelReportCreator mediaPlanExcelReportCreator)
             {
@@ -28,79 +33,88 @@ namespace Player.BusinessLogic.Features.Objects
 
             public async Task<Response> Handle(Query query, CancellationToken cancellationToken)
             {
-                var playlist = await _context.Playlists
+                var playlists = await _context.Playlists
                     .Include(p => p.Object)
+                    .Include(p => p.MusicTracks).ThenInclude(mtp => mtp.MusicTrack).ThenInclude(mt => mt.TrackType)
+                    .Include(p => p.Aderts).ThenInclude(ap => ap.Advert).ThenInclude(a => a.TrackType)
                     .Where(p => p.Object.Id == query.ObjectId && p.PlayingDate == query.Date)
-                    .SingleOrDefaultAsync(cancellationToken);
+                    .ToListAsync(cancellationToken);
 
-                if (playlist == null)
+                if (!playlists.Any())
                 {
-                    return new Response();
+                    return new Response { IsSuccess = false };
                 }
 
-                await _context.Entry(playlist).Collection(p => p.MusicTracks)
-                    .Query()
-                    .Include(mtp => mtp.MusicTrack)
-                    .ThenInclude(mt => mt.TrackType)
-                    .LoadAsync();
+                List<byte[]> files = new List<byte[]>();
+                string fileName = "";
 
-                await _context.Entry(playlist).Collection(p => p.Aderts)
-                    .Query()
-                    .Include(ap => ap.Advert)
-                    .ThenInclude(mt => mt.TrackType)
-                    .LoadAsync();
-
-                var model = new PlaylistModel
+                foreach (var playlist in playlists)
                 {
-                    Object = new ObjectModel
+                    var model = new PlaylistModel
                     {
-                        Id = query.ObjectId,
-                        Name = playlist.Object.Name,
-                        WorkTime = playlist.Object.WorkTime,
-                        EndTime = playlist.Object.EndTime,
-                    },
-                    Tracks = playlist.MusicTracks.OrderBy(mt => mt.PlayingDateTime).Select(m => new TrackModel
+                        Object = new ObjectModel
+                        {
+                            Id = query.ObjectId,
+                            Name = playlist.Object.Name,
+                            WorkTime = playlist.Object.WorkTime,
+                            EndTime = playlist.Object.EndTime,
+                        },
+                        Tracks = playlist.MusicTracks.OrderBy(mt => mt.PlayingDateTime).Select(m => new TrackModel
+                        {
+                            Name = m.MusicTrack.Name,
+                            TypeCode = m.MusicTrack.TrackType.Code,
+                            Length = m.MusicTrack.Length,
+                            StartTime = m.PlayingDateTime,
+                        }).ToList(),
+                        PlayDate = playlist.PlayingDate,
+                    };
+                    adverts = playlist.Aderts.Select(m => new TrackModel
                     {
-                        Name = m.MusicTrack.Name,
-                        TypeCode = m.MusicTrack.TrackType.Code,
-                        Length = m.MusicTrack.Length,
                         StartTime = m.PlayingDateTime,
-                    }).ToList(),
-                    PlayDate = playlist.PlayingDate
-                };
+                        Name = m.Advert.Name,
+                        TypeCode = TrackType.Advert,
+                        Length = m.Advert.Length,
+                    }).ToList();
 
-                if (!model.Tracks.Any())
-                {
-                    return new Response();
+                    model.Tracks.AddRange(adverts);
+                    model.Tracks = model.Tracks.OrderBy(t => t.StartTime).ToList();
+
+                    var fileContent = _mediaPlanExcelReportCreator.Create(model);
+                    files.Add(fileContent);  // Сохраняем содержимое файла для каждого отчета
+                    fileName = $"{query.Date.ToString("d", CultureInfo.CurrentCulture)}_{playlist.Object.Name}_{DateTime.Now}.xlsx";  // Пример формирования имени файла
                 }
 
-                var adverts = playlist.Aderts.Select(m => new TrackModel
+                if (files.Count == 1)
                 {
-                    StartTime = m.PlayingDateTime,
-                    Name = m.Advert.Name,
-                    TypeCode = TrackType.Advert,
-                    Length = m.Advert.Length,
-                }).ToList();
-
-                model.Tracks.AddRange(adverts);
-                model.Tracks = model.Tracks.OrderBy(t => t.StartTime).ToList();
-
-                return new Response
+                    // Если создан только один файл, возвращаем его
+                    return new Response { File = files[0], FileName = fileName, IsSuccess = true };
+                }
+                else
                 {
-                    File = _mediaPlanExcelReportCreator.Create(model),
-                    FileName = $"{query.Date.ToString("d", CultureInfo.CurrentCulture)}_{playlist.Object.Name}_{DateTime.Now}.xlsx",
-                    IsSuccess = true,
-                };
-                //             Процесс создания отчёта:
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                        {
+                            for (int i = 0; i < files.Count; i++)
+                            {
+                                var zipEntry = archive.CreateEntry($"Playlist_{i + 1}.xlsx", CompressionLevel.Fastest);
+                                using (var zipStream = zipEntry.Open())
+                                {
+                                    zipStream.Write(files[i], 0, files[i].Length);
+                                }
+                            }
+                        }
 
-                // Запускается запрос на создание отчета с заданными параметрами.
-                // Выполняется выборка данных о плейлисте из базы данных.
-                // Если плейлист найден, загружаются дополнительные данные о треках и рекламных блоках.
-                // На основе этих данных формируется модель плейлиста для отчета, включая информацию о треках и времени их воспроизведения.
-                // Сервис IMediaPlanExcelReportCreator создает отчет Excel на основе сформированной модели.
-                // Возвращается ответ, содержащий сгенерированный файл, имя файла и статус операции.
-                // Этот метод обрабатывает запрос на создание отчёта медиаплана. Он асинхронно извлекает информацию о плейлисте для заданного объекта и даты. Загружает связанные с плейлистом музыкальные треки и рекламные блоки. Затем формирует модель данных для отчета и использует сервис IMediaPlanExcelReportCreator для создания файла Excel.
+                        return new Response
+                        {
+                            File = memoryStream.ToArray(),
+                            FileName = $"Playlists_{query.Date.ToString("yyyyMMdd")}.zip",
+                            IsSuccess = true
+                        };
+                    }
+                }
             }
+
         }
 
         public class Response

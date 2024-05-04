@@ -40,6 +40,7 @@ namespace Player.BusinessLogic.Features.Selections
                             Id = mt.Id,
                             Name = mt.Name,
                             Length = mt.Length.TotalSeconds,
+                            FilePath = mt.FilePath,
                         }).ToList(),
                     })
                     .SingleAsync(cancellationToken);
@@ -81,6 +82,7 @@ namespace Player.BusinessLogic.Features.Selections
         public class TrackModel : SimpleDto
         {
             public double Length { get; set; }
+            public string FilePath { get; set; }
             //TrackModel используется для представления информации о каждом треке в подборке, включая длительность трека.
         }
     }

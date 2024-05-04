@@ -38,7 +38,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ActivityTypes");
+                    b.ToTable("ActivityTypes", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.AdHistory", b =>
@@ -65,7 +65,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectId");
 
-                    b.ToTable("AdHistories");
+                    b.ToTable("AdHistories", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.AdLifetime", b =>
@@ -90,7 +90,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("AdvertId");
 
-                    b.ToTable("AdLifetimes");
+                    b.ToTable("AdLifetimes", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.AdTime", b =>
@@ -117,7 +117,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectId");
 
-                    b.ToTable("AdTimes");
+                    b.ToTable("AdTimes", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Advert", b =>
@@ -169,7 +169,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("UploaderId");
 
-                    b.ToTable("Adverts");
+                    b.ToTable("Adverts", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.AdvertPlaylist", b =>
@@ -193,7 +193,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("PlaylistId");
 
-                    b.ToTable("AdvertPlaylists");
+                    b.ToTable("AdvertPlaylists", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.AdvertType", b =>
@@ -212,7 +212,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AdvertTypes");
+                    b.ToTable("AdvertTypes", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.BannedMusicInObject", b =>
@@ -238,7 +238,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BannedMusicInObject");
+                    b.ToTable("BannedMusicInObject", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.CheapPlaylistTemplate", b =>
@@ -263,7 +263,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectInfoId");
 
-                    b.ToTable("CheapPlaylistTemplates");
+                    b.ToTable("CheapPlaylistTemplates", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.City", b =>
@@ -278,7 +278,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cities");
+                    b.ToTable("Cities", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Client", b =>
@@ -299,7 +299,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Clients");
+                    b.ToTable("Clients", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Genre", b =>
@@ -314,7 +314,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genres");
+                    b.ToTable("Genres", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Image", b =>
@@ -341,7 +341,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectId");
 
-                    b.ToTable("Images");
+                    b.ToTable("Images", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Interval", b =>
@@ -368,7 +368,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("TrackTypeId");
 
-                    b.ToTable("Intervals");
+                    b.ToTable("Intervals", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Manager", b =>
@@ -384,7 +384,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Managers");
+                    b.ToTable("Managers", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.MusicHistory", b =>
@@ -408,7 +408,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectId");
 
-                    b.ToTable("MusicHistories");
+                    b.ToTable("MusicHistories", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.MusicTrack", b =>
@@ -457,7 +457,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("UploaderId");
 
-                    b.ToTable("MusicTracks");
+                    b.ToTable("MusicTracks", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.MusicTrackGenre", b =>
@@ -478,7 +478,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("MusicTrackId");
 
-                    b.ToTable("MusicTrackGenres");
+                    b.ToTable("MusicTrackGenres", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.MusicTrackPlaylist", b =>
@@ -502,7 +502,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("PlaylistId");
 
-                    b.ToTable("MusicTrackPlaylists");
+                    b.ToTable("MusicTrackPlaylists", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.MusicTrackSelection", b =>
@@ -526,7 +526,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("SelectionId");
 
-                    b.ToTable("MusicTrackSelections");
+                    b.ToTable("MusicTrackSelections", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.ObjectInfo", b =>
@@ -614,7 +614,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ServiceCompanyId");
 
-                    b.ToTable("Objects");
+                    b.ToTable("Objects", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.ObjectSelection", b =>
@@ -622,9 +622,6 @@ namespace Player.DataAccess.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<bool>("IsSelected")
-                        .HasColumnType("boolean");
 
                     b.Property<Guid>("ObjectId")
                         .HasColumnType("uuid");
@@ -638,7 +635,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("SelectionId");
 
-                    b.ToTable("ObjectSelections");
+                    b.ToTable("ObjectSelections", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Organization", b =>
@@ -673,7 +670,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Organizations");
+                    b.ToTable("Organizations", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Permission", b =>
@@ -692,7 +689,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permissions", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.PlayerTask", b =>
@@ -719,7 +716,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Playlist", b =>
@@ -759,7 +756,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectId");
 
-                    b.ToTable("Playlists");
+                    b.ToTable("Playlists", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.PlaylistInfo", b =>
@@ -800,7 +797,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.RolePermissions", b =>
@@ -815,7 +812,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions");
+                    b.ToTable("RolePermissions", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.Selection", b =>
@@ -844,7 +841,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Selections");
+                    b.ToTable("Selections", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.ServiceCompany", b =>
@@ -859,7 +856,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ServiceCompanies");
+                    b.ToTable("ServiceCompanies", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.TrackType", b =>
@@ -878,7 +875,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TrackTypes");
+                    b.ToTable("TrackTypes", (string)null);
 
                     b.HasData(
                         new
@@ -935,7 +932,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
                     b.HasData(
                         new
@@ -957,7 +954,7 @@ namespace Player.DataAccess.Migrations
 
                     b.HasIndex("ObjectId");
 
-                    b.ToTable("UserObjects");
+                    b.ToTable("UserObjects", (string)null);
                 });
 
             modelBuilder.Entity("Player.Domain.AdHistory", b =>
@@ -1258,7 +1255,7 @@ namespace Player.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("ServiceCompanyId");
 
-                    b.OwnsOne("Player.Domain.ObjectInfo+ResponsiblePerson", "ResponsiblePersonOne", b1 =>
+                    b.OwnsOne("Player.Domain.ObjectInfo.ResponsiblePersonOne#Player.Domain.ObjectInfo+ResponsiblePerson", "ResponsiblePersonOne", b1 =>
                         {
                             b1.Property<Guid>("ObjectInfoId")
                                 .HasColumnType("uuid");
@@ -1274,13 +1271,13 @@ namespace Player.DataAccess.Migrations
 
                             b1.HasKey("ObjectInfoId");
 
-                            b1.ToTable("Objects");
+                            b1.ToTable("Objects", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ObjectInfoId");
                         });
 
-                    b.OwnsOne("Player.Domain.ObjectInfo+ResponsiblePerson", "ResponsiblePersonTwo", b1 =>
+                    b.OwnsOne("Player.Domain.ObjectInfo.ResponsiblePersonTwo#Player.Domain.ObjectInfo+ResponsiblePerson", "ResponsiblePersonTwo", b1 =>
                         {
                             b1.Property<Guid>("ObjectInfoId")
                                 .HasColumnType("uuid");
@@ -1296,7 +1293,7 @@ namespace Player.DataAccess.Migrations
 
                             b1.HasKey("ObjectInfoId");
 
-                            b1.ToTable("Objects");
+                            b1.ToTable("Objects", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ObjectInfoId");

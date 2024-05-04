@@ -7,6 +7,6 @@ namespace Player.DTOs
         public Guid Id { get; set; }
         public string Name { get; set; }
         // public object SomeNumericField { get; set; }
-        public bool IsSelected { get; set; } // флаг, указывающее на выбор пользователя
+        // public bool IsSelected { get; set; } // флаг, указывающее на выбор пользователя
     }
 }

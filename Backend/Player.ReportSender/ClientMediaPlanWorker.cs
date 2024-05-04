@@ -17,17 +17,17 @@ using Client = Player.Services.Report.Abstractions.Client;
 namespace Player.ReportSender
 {
     public class ClientMediaPlanWorker : BackgroundService
-    {
+    { //Класс ClientMediaPlanWorker реализует фоновую службу для ASP.NET Core приложения, которая автоматически генерирует и отправляет отчеты по медиапланам клиентам через Telegram. Вот подробное описание работы этого класса:
         private readonly ILogger<ClientMediaPlanWorker> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly IReportGenerator<ClientMediaPlanPdfReportModel> _reportGenerator;
         private readonly IConfiguration _configuration;
 
         public ClientMediaPlanWorker(
-            ILogger<ClientMediaPlanWorker> logger,
-            IServiceProvider serviceProvider,
-            IReportGenerator<ClientMediaPlanPdfReportModel> reportGenerator,
-            IConfiguration configuration)
+            ILogger<ClientMediaPlanWorker> logger, //ILogger<ClientMediaPlanWorker> logger: используется для логирования различной информации и ошибок.
+            IServiceProvider serviceProvider, //IServiceProvider serviceProvider: предоставляет доступ к сервисам приложения.
+            IReportGenerator<ClientMediaPlanPdfReportModel> reportGenerator, //IReportGenerator<ClientMediaPlanPdfReportModel> reportGenerator: сервис для генерации PDF отчетов.
+            IConfiguration configuration) //IConfiguration configuration: обеспечивает доступ к конфигурации приложения.
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -39,7 +39,7 @@ namespace Player.ReportSender
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
-            {
+            { //Вычисляется время до следующего запланированного запуска на основе конфигурации.
                 var timeLeft =
                     DateTime.Today.Add(TimeSpan.Parse(_configuration.GetValue<string>("Player:ReportTime"))) -
                     DateTime.Now;
@@ -56,7 +56,7 @@ namespace Player.ReportSender
                 _logger.LogInformation("Worker woke up");
 
                 try
-                {
+                { //Служба "усыпляется" до этого времени, а затем пытается выполнить основную рабочую логику в DoWork.
                     //TODO Это было бы не плохо делать параллельно
                     await DoWork(stoppingToken);
                 }
@@ -88,7 +88,7 @@ namespace Player.ReportSender
                 .Where(m => m.User.TelegramChatId.HasValue)
                 .Where(c => !c.User.Role.RolePermissions.Any(rp => rp.Permission.Code == Permission.PartnerAccessToObject))
                 .ToListAsync(stoppingToken);
-            //Запрашивает из базы данных список клиентов, у которых есть действующий Telegram чат ID и которые не имеют доступа к объекту в роли партнера.
+            //Запрашивает из базы данных список клиентов, у которых есть действующий Telegram чат ID и которые не имеют доступа к объекту в роли партнера. Создается контекст для извлечения данных клиентов и историй рекламных объявлений.
             var allObjects = clients.SelectMany(u => u.User.Objects).Select(o => o.Object);
 
             var yesterday = DateTime.Today.AddDays(-1);
@@ -100,7 +100,7 @@ namespace Player.ReportSender
                 .Where(ah => allObjects.Contains(ah.Object) && ah.End.Date == yesterday)
                 .ToListAsync(stoppingToken);
             //Получает список всех рекламных историй для объектов, связанных с этими клиентами, за вчерашний день.
-            foreach (var client in clients)
+            foreach (var client in clients) //Для каждого клиента, если есть данные по рекламным активностям его объектов, генерируется и отправляется отчет в PDF формате через Telegram.
             {
                 //Для каждого клиента генерируется и отправляется отчет по каждому объекту, если для этого объекта были рекламные истории. Если нет рекламных историй для конкретного объекта, отправка отчета пропускается.
                 _logger.LogInformation("Sending mediaplan to client {ClientId}", client.Id);

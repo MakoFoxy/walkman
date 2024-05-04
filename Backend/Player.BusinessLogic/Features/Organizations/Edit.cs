@@ -60,7 +60,7 @@ namespace Player.BusinessLogic.Features.Organizations
                         };
                         foreach (var clientModelObject in clientModel.Objects)
                         {
-                            user.Objects.Add(new UserObjects
+                            user.Objects.Add(new UserObjects // обновление нового объекта
                             {
                                 ObjectId = clientModelObject.Id,
                                 UserId = user.Id

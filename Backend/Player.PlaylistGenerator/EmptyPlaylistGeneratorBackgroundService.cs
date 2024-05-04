@@ -34,18 +34,18 @@ namespace Player.PlaylistGenerator
             await CreateEmptyPlaylist(stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
-            {
+            {//Расчет времени до следующего выполнения: Сначала определяется разница между текущим временем и временем, установленным для выполнения задачи (13:00 текущего дня).
                 var timeLeft = DateTime.Today.Add(TimeSpan.Parse(_configuration.GetValue<string>("Player:EmptyPlaylistGenerationTime"))) - DateTime.Now;
 
                 if (timeLeft < TimeSpan.Zero)
-                {
+                {//Корректировка времени: Если рассчитанное время уже прошло (т.е. timeLeft < TimeSpan.Zero), то к этому времени добавляется один день, чтобы задача выполнилась в 13:00 следующего дня.
                     timeLeft = timeLeft.Add(TimeSpan.FromDays(1));
                 }
 
                 var nextWakeUpTime = DateTime.Now.Add(timeLeft);
 
                 _logger.LogInformation("EmptyPlaylistGenerator wake up at {NextWakeUpTime}", nextWakeUpTime);
-                await Task.Delay(timeLeft, stoppingToken);
+                await Task.Delay(timeLeft, stoppingToken); //Ожидание до следующего времени выполнения: Сервис ожидает до рассчитанного времени (nextWakeUpTime), используя Task.Delay(timeLeft, stoppingToken), прежде чем приступить к созданию пустого плейлиста.
                 _logger.LogInformation("EmptyPlaylistGenerator woke up");
 
                 await CreateEmptyPlaylist(stoppingToken);

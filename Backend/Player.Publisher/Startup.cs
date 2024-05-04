@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -180,7 +182,12 @@ namespace Player.Publisher
                 .AllowCredentials()
                 .AllowAnyHeader());
             //Настраивает политику CORS (Cross-Origin Resource Sharing), разрешая запросы с определенных источников (доменов), все методы (GET, POST и т.д.) и заголовки, а также поддержку учетных данных (куки, авторизационные заголовки).
-
+            // app.UseStaticFiles(new StaticFileOptions
+            // {
+            //     FileProvider = new PhysicalFileProvider(
+            //             Path.Combine(Directory.GetCurrentDirectory(), @"C:\Users\DELL\Desktop\player\songs")),
+            //     RequestPath = new PathString("/songs")
+            // });
             app.UseRouting();
             //Включает маршрутизацию в приложении для определения, какой обработчик должен быть вызван для обработки входящего запроса.
             app.UseForwardedHeaders(new ForwardedHeadersOptions

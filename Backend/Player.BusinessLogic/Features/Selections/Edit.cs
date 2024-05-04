@@ -36,7 +36,7 @@ namespace Player.BusinessLogic.Features.Selections
                 selection.DateBegin = model.DateBegin;
                 selection.DateEnd = model.DateEnd;
                 selection.IsPublic = request.Model.IsPublic;
-                selection.MusicTracks.Clear();
+                selection.MusicTracks.Clear(); //Очищение музыкальных треков
 
                 for (var i = 0; i < model.Tracks.Count; i++)
                 {
@@ -44,7 +44,7 @@ namespace Player.BusinessLogic.Features.Selections
                     {
                         Index = i,
                         MusicTrackId = model.Tracks[i],
-                        Selection = selection,
+                        Selection = selection, //обновление подборки
                     };
 
                     selection.MusicTracks.Add(musicTrackSelection);

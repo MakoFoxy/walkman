@@ -34,28 +34,28 @@ namespace Player.BusinessLogic.Features.Objects
                 CancellationToken cancellationToken = default)
             {//Метод Handle возвращает объект BaseFilterResult<ObjectModel>, который содержит отфильтрованный список объектов (Result), а также информацию для пагинации (Page, ItemsPerPage, TotalItems), что позволяет клиенту удобно отображать данные с поддержкой разбивки на страницы. Результат: Возвращает BaseFilterResult<ObjectModel>, который содержит информацию о объектах, включая их идентификаторы, названия, адреса и другие свойства. В ответе также указывается общее количество объектов, которые соответствуют критериям фильтрации.
                 var result = new BaseFilterResult<ObjectModel>
-                {
+                {//    Создается экземпляр BaseFilterResult<ObjectModel>, который инициализируется данными о текущей странице и количестве элементов на страницу, полученными из запроса.
                     Page = request.Filter.Page,
                     ItemsPerPage = request.Filter.ItemsPerPage
                 };
 
-                var query = _context.Objects.AsQueryable();
+                var query = _context.Objects.AsQueryable(); //    Формируется начальный запрос к базе данных на выборку всех объектов через контекст _context с преобразованием в IQueryable для последующих модификаций запроса.
 
                 if (!string.IsNullOrWhiteSpace(request.Filter.Name))
-                {
+                {//    Если в фильтре указано имя объекта, модифицируется запрос так, чтобы выбирать объекты, имя которых содержит заданную строку, независимо от регистра.
                     query = query.Where(o => o.Name.ToLower().Contains(request.Filter.Name.ToLower()));
                     //В этом участке кода проверяется, указано ли в запросе имя объекта (request.Filter.Name). Если имя указано, запрос к базе данных модифицируется так, чтобы выбирать только те объекты, имя которых содержит указанную строку. Сравнение происходит без учета регистра, что обеспечивает более гибкий поиск.
                 }
 
                 if (request.Filter.IsOnline)
-                {
+                {//    Если фильтр IsOnline активен, модифицируется запрос, чтобы выбирать только те объекты, которые доступны онлайн.
                     query = query.Where(o => o.IsOnline);
                 }
 
-                var permissions = await _userManager.GetCurrentUserPermissions(cancellationToken);
+                var permissions = await _userManager.GetCurrentUserPermissions(cancellationToken); //    Асинхронно получает текущие разрешения пользователя через менеджер пользователей, что необходимо для дальнейшей фильтрации доступа к объектам.
 
                 if (permissions.Any(p => p.Code == Permission.PartnerAccessToObject))
-                {//Также в обработчике предусмотрена логика для работы с правами пользователя, что позволяет фильтровать объекты в зависимости от организации пользователя, если у пользователя есть соответствующие права (Permission.PartnerAccessToObject). Это делает систему гибкой и безопасной, ограничивая доступ к объектам на основе роли и организации пользователя.
+                {//Также в обработчике предусмотрена логика для работы с правами пользователя, что позволяет фильтровать объекты в зависимости от организации пользователя, если у пользователя есть соответствующие права (Permission.PartnerAccessToObject). Это делает систему гибкой и безопасной, ограничивая доступ к объектам на основе роли и организации пользователя.//    Если у пользователя есть разрешение PartnerAccessToObject, запрос модифицируется так, чтобы возвращать объекты, принадлежащие его организации. Для этого используется цепочка связей организация -> клиенты -> объекты.
                     var organization = await _userManager.GetUserOrganization(cancellationToken);
 
                     query = query.Where(o => _context.Organizations
@@ -70,7 +70,7 @@ namespace Player.BusinessLogic.Features.Objects
                     .GetPagedQuery(result.Page, result.ItemsPerPage)
                     .OrderBy(o => o.Name)
                     .Select(info => new ObjectModel
-                    {
+                    {//    Получает страницу с отфильтрованными данными и преобразует каждый элемент в ObjectModel, включая загрузку плейлистов, уникальные и общие количество объявлений, перегрузку и проверку на наличие плейлиста.
                         Id = info.Id,
                         Name = info.Name,
                         ActualAddress = info.ActualAddress,
@@ -93,9 +93,10 @@ namespace Player.BusinessLogic.Features.Objects
                     })
                     .ToListAsync(cancellationToken);
 
-                result.TotalItems = await query.CountAsync(cancellationToken);
+                result.TotalItems = await query.CountAsync(cancellationToken); //    Асинхронно подсчитывает общее количество элементов, удовлетворяющих условиям фильтрации.
 
-                return result;
+                //Этот метод использует фильтры, заданные в ObjectFilterModel для запроса, и возвращает данные, удобные для пагинации и представления на клиенте.
+                return result; //    Возвращает результат с информацией о странице, количестве элементов на странице, списке объектов и общем количестве элементов.
                 // Это основной метод обработчика, который асинхронно обрабатывает запрос на получение списка объектов, применяя фильтры, указанные в request.Filter, и возвращает отфильтрованный и упорядоченный список объектов вместе с информацией о пагинации.
 
                 // В методе происходит следующее:

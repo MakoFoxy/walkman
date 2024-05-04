@@ -9,7 +9,6 @@ namespace Player.Domain
         public Guid ObjectId { get; set; }
         public Selection Selection { get; set; }
         public Guid SelectionId { get; set; }
-        public bool IsSelected { get; set; }
-
+        // public bool IsSelected { get; set; }
     }
 }

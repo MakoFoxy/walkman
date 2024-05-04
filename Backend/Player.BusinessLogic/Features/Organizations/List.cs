@@ -59,7 +59,7 @@ namespace Player.BusinessLogic.Features.Organizations
                         Bank = o.Bank,
                         Iik = o.Iik,
                         Phone = o.Phone,
-                        UserCount = o.Clients.Count,
+                        UserCount = o.Clients.Count, 
                     })
                     .ToListAsync(cancellationToken); //Запрос асинхронно выполняется с помощью ToListAsync, что приводит к получению финального списка организаций, ограниченного правами пользователя и параметрами фильтрации.
 

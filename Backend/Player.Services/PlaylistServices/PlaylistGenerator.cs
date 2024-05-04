@@ -34,10 +34,10 @@ public class PlaylistGenerator : BasePlaylistGenerator
 
     public override async Task<PlaylistGeneratorResult> Generate(ObjectInfo objectInfo, DateTime date, CancellationToken cancellationToken = default)
     {
-        var playlistEnvelope = await GetPlaylist(objectInfo, date); //Сначала получает информацию о плейлисте, вызывая метод GetPlaylist. Если на указанную дату это выходной, плейлист не генерируется.
+        var playlistEnvelope = await GetPlaylist(objectInfo, date); //Сначала получает информацию о плейлисте, вызывая метод GetPlaylist. Если на указанную дату это выходной, плейлист не генерируется. Метод начинается с асинхронного получения информации о плейлисте с использованием метода GetPlaylist. Эта информация включает в себя текущий состав плейлиста и возможно другие данные, такие как статус, является ли плейлист новым и т.д.
 
         if (IsFreeDay(objectInfo, date))
-        {
+        {//Затем проверяется, является ли указанная дата выходным днем для данного объекта с помощью метода IsFreeDay. Если это так и плейлист является новым, возвращается статус "Не сгенерировано". Если плейлист не новый, выполняется его удаление через DeleteStatus.
             if (playlistEnvelope.IsNew)
             {
                 return NotGeneratedStatus();
@@ -54,17 +54,17 @@ public class PlaylistGenerator : BasePlaylistGenerator
             .Select(ap => ap.Advert)
             .OrderBy(a => a.CreateDate)
             .ToList();
-        allAdverts.AddRange(oldAdvertsInPlaylist);
+        allAdverts.AddRange(oldAdvertsInPlaylist); //Далее устанавливается максимальная длительность блока рекламы. Загружаются все рекламные блоки, уже присутствующие в плейлисте. Они сортируются по дате создания и добавляются в список allAdverts.
 
-        var distinctOldAdverts = playlistEnvelope.Playlist.Aderts
+        var distinctOldAdverts = playlistEnvelope.Playlist.Aderts //Сначала создается список distinctOldAdverts, который содержит уникальные рекламные блоки, уже существующие в плейлисте. Эти рекламные блоки выбираются, делаются уникальными (без дубликатов), сортируются по дате создания и сохраняются в список.
             .Select(ap => ap.Advert)
             .Distinct()
             .OrderBy(a => a.CreateDate)
             .ToList();
         DebugInfo.Add($"Adverts in playlists {string.Join(";", distinctOldAdverts.Select(a => a.Name))}");
-
+       
         foreach (var oldAdvert in distinctOldAdverts)
-        {
+        { //Затем проходится цикл по каждой уникальной рекламе в distinctOldAdverts. Для каждой рекламы извлекается информация о времени показа на указанную дату и для данного объекта (objectInfo). Проверяется, совпадает ли запланированное количество повторений (RepeatCount) с количеством уже включенных в плейлист экземпляров этой рекламы. Если не совпадает, разница между запланированным и фактическим количеством добавляется в общий список allAdverts.
             var adTime = oldAdvert.AdTimes.Single(at => at.PlayDate == date && at.Object == objectInfo);
 
             if (adTime.RepeatCount == oldAdvertsInPlaylist.Count(a => a == oldAdvert))
@@ -83,11 +83,11 @@ public class PlaylistGenerator : BasePlaylistGenerator
             .Where(a => a.AdTimes.Any(at => at.Object == objectInfo))
             .Where(a => !distinctOldAdverts.Contains(a))
             .OrderBy(a => a.CreateDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken); 
+        DebugInfo.Add($"New adverts {string.Join(";", newAdverts.Select(a => a.Name))}"); //Далее загружаются новые рекламные блоки, которые допустимы к показу на данную дату и для данного объекта, но которых еще нет в плейлисте (distinctOldAdverts). Рекламные блоки включаются в запрос с необходимыми включениями связанных данных (Include), и затем список загружается асинхронно.
 
-        DebugInfo.Add($"New adverts {string.Join(";", newAdverts.Select(a => a.Name))}");
         foreach (var newAdvert in newAdverts)
-        {
+        {//Для каждой новой рекламы также проверяется количество повторений на указанную дату, и эта реклама добавляется в allAdverts нужное количество раз, в соответствии с запланированным количеством показов.
             var adTime = newAdvert.AdTimes.Single(at => at.PlayDate == date && at.Object == objectInfo);
 
             for (var i = 0; i < adTime.RepeatCount; i++)
