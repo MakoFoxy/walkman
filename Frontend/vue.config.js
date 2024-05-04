@@ -7,7 +7,7 @@ module.exports = {
           "changeOrigin": true
         },
         "/songs": {
-          "target": "http://localhost:5000",
+          "target": "http://172.22.0.1:8083",
           "changeOrigin": true
         }
       }

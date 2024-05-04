@@ -48,7 +48,7 @@ export default {
     },
     data () {
       return {
-        timeout: 5000,
+        timeout: 5003,
       }
     }
 }
