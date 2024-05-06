@@ -34,10 +34,12 @@ public class PlaylistGenerator : BasePlaylistGenerator
 
     public override async Task<PlaylistGeneratorResult> Generate(ObjectInfo objectInfo, DateTime date, CancellationToken cancellationToken = default)
     {
-        var playlistEnvelope = await GetPlaylist(objectInfo, date); //Сначала получает информацию о плейлисте, вызывая метод GetPlaylist. Если на указанную дату это выходной, плейлист не генерируется. Метод начинается с асинхронного получения информации о плейлисте с использованием метода GetPlaylist. Эта информация включает в себя текущий состав плейлиста и возможно другие данные, такие как статус, является ли плейлист новым и т.д.
+        var playlistEnvelope = await GetPlaylist(objectInfo, date); //GetPlaylist: Метод асинхронно извлекает данные плейлиста для указанного объекта (objectInfo) и даты (date). Это может включать информацию о текущем составе плейлиста и его статусе (новый или существующий).
 
         if (IsFreeDay(objectInfo, date))
-        {//Затем проверяется, является ли указанная дата выходным днем для данного объекта с помощью метода IsFreeDay. Если это так и плейлист является новым, возвращается статус "Не сгенерировано". Если плейлист не новый, выполняется его удаление через DeleteStatus.
+        {//    IsFreeDay: Проверяет, является ли указанная дата выходным днем для объекта. Если да, то действия зависят от статуса плейлиста:
+         // NotGeneratedStatus: Возвращает статус, что плейлист не сгенерирован для новых плейлистов.
+         // DeleteStatus: Удаляет плейлист, если он не новый.
             if (playlistEnvelope.IsNew)
             {
                 return NotGeneratedStatus();
@@ -53,8 +55,8 @@ public class PlaylistGenerator : BasePlaylistGenerator
         var oldAdvertsInPlaylist = playlistEnvelope.Playlist.Aderts
             .Select(ap => ap.Advert)
             .OrderBy(a => a.CreateDate)
-            .ToList();
-        allAdverts.AddRange(oldAdvertsInPlaylist); //Далее устанавливается максимальная длительность блока рекламы. Загружаются все рекламные блоки, уже присутствующие в плейлисте. Они сортируются по дате создания и добавляются в список allAdverts.
+            .ToList(); //Собирает и сортирует существующие в плейлисте рекламные блоки по дате создания.
+        allAdverts.AddRange(oldAdvertsInPlaylist); //Рекламы добавляются в общий список allAdverts.
 
         var distinctOldAdverts = playlistEnvelope.Playlist.Aderts //Сначала создается список distinctOldAdverts, который содержит уникальные рекламные блоки, уже существующие в плейлисте. Эти рекламные блоки выбираются, делаются уникальными (без дубликатов), сортируются по дате создания и сохраняются в список.
             .Select(ap => ap.Advert)
@@ -62,7 +64,7 @@ public class PlaylistGenerator : BasePlaylistGenerator
             .OrderBy(a => a.CreateDate)
             .ToList();
         DebugInfo.Add($"Adverts in playlists {string.Join(";", distinctOldAdverts.Select(a => a.Name))}");
-       
+
         foreach (var oldAdvert in distinctOldAdverts)
         { //Затем проходится цикл по каждой уникальной рекламе в distinctOldAdverts. Для каждой рекламы извлекается информация о времени показа на указанную дату и для данного объекта (objectInfo). Проверяется, совпадает ли запланированное количество повторений (RepeatCount) с количеством уже включенных в плейлист экземпляров этой рекламы. Если не совпадает, разница между запланированным и фактическим количеством добавляется в общий список allAdverts.
             var adTime = oldAdvert.AdTimes.Single(at => at.PlayDate == date && at.Object == objectInfo);
@@ -83,7 +85,7 @@ public class PlaylistGenerator : BasePlaylistGenerator
             .Where(a => a.AdTimes.Any(at => at.Object == objectInfo))
             .Where(a => !distinctOldAdverts.Contains(a))
             .OrderBy(a => a.CreateDate)
-            .ToListAsync(cancellationToken); 
+            .ToListAsync(cancellationToken);
         DebugInfo.Add($"New adverts {string.Join(";", newAdverts.Select(a => a.Name))}"); //Далее загружаются новые рекламные блоки, которые допустимы к показу на данную дату и для данного объекта, но которых еще нет в плейлисте (distinctOldAdverts). Рекламные блоки включаются в запрос с необходимыми включениями связанных данных (Include), и затем список загружается асинхронно.
 
         foreach (var newAdvert in newAdverts)
@@ -97,72 +99,73 @@ public class PlaylistGenerator : BasePlaylistGenerator
         }
         //Загружает музыкальные треки для объекта.
 
-        var musicTracks = await _trackLoader.LoadForObject(objectInfo, cancellationToken);
+        var musicTracks = await _trackLoader.LoadForObject(objectInfo, cancellationToken); //Метод LoadForObject асинхронно загружает музыкальные треки, которые должны быть включены в плейлист для данного объекта (objectInfo). Используется cancellationToken для возможности отмены операции, если это потребуется. Загруженные треки сохраняются в переменной musicTracks.
 
-        PopulateMusicTracks(playlistEnvelope.Playlist, objectInfo, musicTracks);
-        var notFittedAdverts = PopulateAdverts(playlistEnvelope.Playlist, objectInfo, allAdverts);
+        PopulateMusicTracks(playlistEnvelope.Playlist, objectInfo, musicTracks); //Метод PopulateMusicTracks используется для добавления загруженных музыкальных треков в плейлист. Он принимает текущий плейлист, информацию об объекте и список музыкальных треков, и распределяет их в плейлисте согласно заданным правилам и ограничениям.
+        var notFittedAdverts = PopulateAdverts(playlistEnvelope.Playlist, objectInfo, allAdverts); //PopulateAdverts распределяет рекламные блоки из списка allAdverts по плейлисту. Метод возвращает список реклам, которые не удалось вместить в плейлист (notFittedAdverts). Это может быть связано с ограничениями по времени, количеству повторений или другими правилами.
 
         //Распределяет рекламные и музыкальные треки по плейлисту, учитывая заданные ограничения по времени и правила.
-        CalculatePlaylistLoading(objectInfo, playlistEnvelope);
+        CalculatePlaylistLoading(objectInfo, playlistEnvelope); //Метод CalculatePlaylistLoading выполняет финальный расчет загрузки плейлиста, учитывая все рекламные и музыкальные треки, уже распределенные в плейлисте. Он проверяет, соответствует ли итоговая композиция плейлиста всем требованиям и ограничениям.
 
         playlistEnvelope.Playlist.PlaylistInfos.Add(new PlaylistInfo
-        {
+        {//Здесь добавляется информационный блок в плейлист, который содержит детали процесса генерации (собранные в DebugInfo) и дату создания этой информации. Это может быть полезно для аудита или отладки процесса генерации плейлиста.
             Info = string.Join(Environment.NewLine, DebugInfo),
             CreateDate = DateTime.Now,
         });
 
-        return GeneratedStatus(playlistEnvelope.Playlist, DebugInfo, notFittedAdverts); //Возвращает результат генерации, который включает в себя сам плейлист и информацию о рекламах, которые не уместились в плейлист.
+        return GeneratedStatus(playlistEnvelope.Playlist, DebugInfo, notFittedAdverts); //Возвращает результат генерации, который включает в себя сам плейлист и информацию о рекламах, которые не уместились в плейлист. Метод GeneratedStatus формирует и возвращает результат генерации плейлиста, который включает сам плейлист, отладочную информацию и список реклам, которые не уместились в плейлист. Это финальный этап процесса, когда пользователь или другие части системы получают готовый продукт с необходимыми метаданными.
     }
 
     private List<Advert> PopulateAdverts(Playlist playlist, ObjectInfo objectInfo, ICollection<Advert> adverts)
     //Этот код отвечает за распределение рекламных блоков в плейлисте с учетом заданных временных параметров и правил
     {
-        playlist.Aderts.Clear(); //Очищает текущие рекламные блоки в плейлисте.
-        var maxAdvertBlockInSecondsWithSmallGap = _maxAdvertBlockInSeconds + 3; //var maxAdvertBlockInSecondsWithSmallGap = _maxAdvertBlockInSeconds + 3;: Задает максимально допустимую продолжительность рекламного блока с небольшим запасом времени (3 секунды) для учета возможных интервалов между рекламами.
-        var maxMusicBlockTimeInSeconds = AdvertsCalculationHelper.GetMaxMusicBlockTimeInSeconds(objectInfo); //var maxMusicBlockTimeInSeconds = AdvertsCalculationHelper.GetMaxMusicBlockTimeInSeconds(objectInfo);: Получает максимальное время музыкального блока для данного объекта.
+        playlist.Aderts.Clear(); //Очищает текущие рекламные блоки в плейлисте. Эта строка удаляет все текущие рекламные блоки из плейлиста, подготавливая его к новой генерации рекламного контента.
+        var maxAdvertBlockInSecondsWithSmallGap = _maxAdvertBlockInSeconds + 3; //var maxAdvertBlockInSecondsWithSmallGap = _maxAdvertBlockInSeconds + 3;: Задает максимально допустимую продолжительность рекламного блока с небольшим запасом времени (3 секунды) для учета возможных интервалов между рекламами.  устанавливает максимальную длительность рекламного блока, добавляя 3 секунды для учета возможных интервалов между рекламами.
+        var maxMusicBlockTimeInSeconds = AdvertsCalculationHelper.GetMaxMusicBlockTimeInSeconds(objectInfo); //var maxMusicBlockTimeInSeconds = AdvertsCalculationHelper.GetMaxMusicBlockTimeInSeconds(objectInfo);: Получает максимальное время музыкального блока для данного объекта. определяет максимальное время для музыкальных блоков для данного объекта.
 
         // плейлист начиниается и заканчивается музыкой, делаем музыкальные блоки в начале и в конце
         var advertsBeginTime = AdvertsCalculationHelper.GetAdvertsBeginTime(objectInfo);
         var advertsEndTime = AdvertsCalculationHelper.GetAdvertsEndTime(objectInfo);
-        //Определяют время начала и окончания воспроизведения рекламных блоков в плейлисте, оставляя время для музыкальных блоков в начале и в конце.
+        //Определяют время начала и окончания воспроизведения рекламных блоков в плейлисте, оставляя время для музыкальных блоков в начале и в конце. Эти методы определяют начальное и конечное время воспроизведения рекламных блоков в плейлисте, обеспечивая наличие музыкальных блоков в начале и в конце плейлиста.
         //Распределяет рекламные блоки в плейлисте, соблюдая максимальное время их длительности и интервалы между музыкальными блоками.
-        var currentTime = advertsBeginTime; //Устанавливает текущее время воспроизведения рекламы на время начала воспроизведения рекламных блоков.
+        var currentTime = advertsBeginTime; //Устанавливает текущее время воспроизведения рекламы на время начала воспроизведения рекламных блоков. устанавливает начальное время для размещения первого рекламного блока.
 
-        var remainingAdverts = adverts.ToList(); //Создает список оставшихся для распределения реклам.
+        var remainingAdverts = adverts.ToList(); //Создает список оставшихся для распределения реклам. создает список всех реклам, которые нужно разместить в плейлисте.
 
         while (currentTime <= advertsEndTime)
-        {
+        {//Цикл продолжается до тех пор, пока текущее время не превысит время окончания рекламных блоков. В каждой итерации создается новый список для рекламного блока.
             var advertBlock = new List<Advert>(); //Создает новый временный список для рекламного блока.
 
+            //Эта строка инициализирует новый список advertBlock, который будет использоваться для временного хранения реклам, выбранных для включения в текущий рекламный блок плейлиста. Этот список наполняется в процессе обработки и проверки каждой рекламы на соответствие заданным критериям длительности и временных рамок.
 
-            if (!remainingAdverts.Any()) //Проверка if (!remainingAdverts.Any()): Если не осталось реклам для распределения, пропускает время до следующего музыкального блока. 
+            if (!remainingAdverts.Any()) //Проверка if (!remainingAdverts.Any()): Если не осталось реклам для распределения, пропускает время до следующего музыкального блока.  !remainingAdverts.Any(): Проверяет, пуст ли список remainingAdverts. Если да, то это означает, что все доступные рекламы уже распределены или их не было с самого начала.
             {
-                currentTime = currentTime.RoundUp()
-                    .Add(TimeSpan.FromSeconds(maxMusicBlockTimeInSeconds))
-                    .Add(AdvertsCalculationHelper.GapForClient);
+                currentTime = currentTime.RoundUp() //currentTime.RoundUp(): Возможно округляет текущее время до следующего полного интервала (например, до начала следующей минуты), чтобы избежать перекрытия с музыкальными блоками.
+                    .Add(TimeSpan.FromSeconds(maxMusicBlockTimeInSeconds)) //.Add(TimeSpan.FromSeconds(maxMusicBlockTimeInSeconds)): Добавляет максимально допустимое время музыкального блока к текущему времени, устанавливая интервал до начала следующего возможного рекламного блока.
+                    .Add(AdvertsCalculationHelper.GapForClient); //.Add(AdvertsCalculationHelper.GapForClient): Добавляет дополнительный временной интервал, который может быть использован для технического перерыва или других целей, обеспечивающих плавный переход между блоками.
                 continue;
             }
 
             foreach (var remainingAdvert in remainingAdverts) //В цикле foreach: Перебирает оставшиеся рекламы, проверяя, можно ли добавить рекламу в текущий блок без превышения максимально допустимой длительности.
-            {
+            { //Определение длительности рекламного блока: Используется лямбда-выражение для подсчета общей длительности всех реклам в текущем блоке advertBlock и проверяется, укладывается ли добавление новой рекламы remainingAdvert в установленные временные рамки (maxAdvertBlockInSecondsWithSmallGap).
                 var possibleBlockLength = advertBlock.Sum(ab => ab.Length.TotalSeconds) +
                                           remainingAdvert.Length.TotalSeconds;
 
                 if (possibleBlockLength > maxAdvertBlockInSecondsWithSmallGap)
-                {
+                {//Условие пропуска: Если добавление рекламы превысит максимально допустимую длительность, текущая реклама пропускается.
                     continue;
                 }
 
                 if (!advertBlock.Contains(remainingAdvert))
-                {
+                { //Добавление рекламы: Если реклама не превышает ограничения и еще не содержится в текущем блоке, она добавляется в advertBlock.
                     advertBlock.Add(remainingAdvert);
                 }
             }
 
             foreach (var advert in advertBlock)
-            {
+            { //Создание объекта AdvertPlaylist: Каждая реклама из блока регистрируется в плейлисте с указанием точного времени начала воспроизведения, которое вычисляется на основе текущего времени currentTime.
                 var advertPlaylist = new AdvertPlaylist
-                {
+                { //Обновление времени: После добавления рекламы в плейлист, currentTime увеличивается на длительность рекламы и дополнительный интервал, заданный в AdvertsCalculationHelper.GapForClient.
                     Playlist = playlist,
                     PlayingDateTime = playlist.PlayingDate.Add(currentTime),
                     Advert = advert
@@ -174,15 +177,15 @@ public class PlaylistGenerator : BasePlaylistGenerator
             }
 
             var totalBlockLength = TimeSpan.FromSeconds(advertBlock.Sum(ab => ab.Length.TotalSeconds));
-            DebugInfo.Add($"Block length = {totalBlockLength}");
+            DebugInfo.Add($"Block length = {totalBlockLength}"); //Подсчет общей длительности блока: Вычисляется и регистрируется в DebugInfo для отладки и мониторинга.
 
             currentTime = currentTime.RoundUp()
                 .Add(TimeSpan.FromSeconds(maxMusicBlockTimeInSeconds))
-                .Add(AdvertsCalculationHelper.GapForClient);
+                .Add(AdvertsCalculationHelper.GapForClient); //Округление времени и добавление музыкального блока: currentTime округляется и увеличивается на максимально допустимое время музыкального блока, обеспечивая интервал между рекламными блоками.
 
             foreach (var advert in advertBlock)
             {
-                remainingAdverts.Remove(advert);
+                remainingAdverts.Remove(advert); //Удаление использованных реклам: Рекламы, которые были добавлены в плейлист, удаляются из списка оставшихся реклам.
             }
         }
 
@@ -200,7 +203,7 @@ public class PlaylistGenerator : BasePlaylistGenerator
         }
         playlist.MusicTracks.Clear(); //Эта строка удаляет все существующие музыкальные треки из плейлиста, чтобы начать распределение заново.
         var currentTime = objectInfo.BeginTime; //var currentTime = objectInfo.BeginTime;: Устанавливает начальное время воспроизведения музыкальных треков равным времени начала работы объекта (например, открытия магазина или ресторана).
-
+        
         using IEnumerator<MusicTrack> musicTrackEnumerator = musicTracks.GetEnumerator(); //Создает перечислитель для коллекции музыкальных треков, чтобы последовательно итерировать по ним.
         musicTrackEnumerator.MoveNext(); // Перемещаемся к первому треку перед началом цикла
         // todo проверить 24 часа
@@ -253,7 +256,8 @@ public class PlaylistGenerator : BasePlaylistGenerator
     //Этот код относится к сервису для генерации плейлистов и вычисления их загрузки в системе управления медиа-контентом. Давайте разберем каждую строку:
     {
         playlistEnvelope.Playlist.Loading = _playlistLoadingCalculator.GetLoading(objectInfo, playlistEnvelope.Playlist); //Вычисляет общую загрузку плейлиста на основании анализа содержимого и установок объекта.
-        playlistEnvelope.Playlist.UniqueAdvertsCount = playlistEnvelope.Playlist.Aderts.Select(a => a.Advert).Distinct().Count(); //Считает количество уникальных рекламных блоков в плейлисте.
+        playlistEnvelope.Playlist.UniqueAdvertsCount = playlistEnvelope.Playlist.Aderts.Select(a => a.Advert).Distinct().Count(); 
+        //Считает количество уникальных рекламных блоков в плейлисте.
         playlistEnvelope.Playlist.AdvertsCount = playlistEnvelope.Playlist.Aderts.Select(a => a.Advert).Count(); //Считает общее количество рекламных блоков в плейлисте.
 
         playlistEnvelope.Playlist.Overloaded = _playlistLoadingCalculator.IsOverloaded(playlistEnvelope.Playlist); //Определяет, перегружен ли плейлист на основе его содержимого.
@@ -266,3 +270,19 @@ public class PlaylistGenerator : BasePlaylistGenerator
     }
     //Каждая строка в этом коде помогает определить и записать характеристики генерируемого плейлиста, включая его загрузку, количество рекламы и музыкальных треков, а также проверяет, не перегружен ли плейлист с точки зрения общего времени звучания и количества рекламных блоков.
 }
+
+// Функция PopulateMusicTracks
+
+// Эта функция отвечает за добавление музыкальных треков в плейлист. В ней происходит следующее:
+
+//     Определение времени воспроизведения: Для каждого музыкального трека определяется точное время его воспроизведения на основе текущего состояния плейлиста и предыдущих треков или рекламных блоков.
+//     Создание записей: Для каждого трека создается объект, например, MusicTrackPlaylist, который включает в себя ссылку на сам трек, на плейлист, к которому он относится, и время его воспроизведения.
+//     Добавление в плейлист: Обновленные данные о треках добавляются в общий плейлист, который затем может быть использован для воспроизведения или сохранен для последующего использования.
+
+// Функция PopulateAdverts
+
+// Функция PopulateAdverts аналогична функции PopulateMusicTracks, но работает с рекламными блоками:
+
+//     Определение времени воспроизведения: Как и в случае с музыкальными треками, для каждой рекламы определяется время ее воспроизведения. Это время зависит от предыдущих элементов в плейлисте и должно учитывать различные ограничения, такие как максимальная продолжительность рекламных блоков и необходимость музыкальных интервалов.
+//     Создание записей: Создается объект AdvertPlaylist, который включает в себя рекламу, плейлист и точное время воспроизведения.
+//     Добавление в плейлист и обработка оставшихся реклам: Рекламы, которые успешно прошли проверку, добавляются в плейлист. Те рекламы, которые не уместились по времени или другим параметрам, сохраняются в список, который возвращается из функции. Этот список можно использовать для корректировки планирования или переноса реклам на другое время или в другой плейлист.
