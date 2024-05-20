@@ -79,6 +79,29 @@ namespace Player.BusinessLogic.Features.Objects
                     model.Tracks.AddRange(adverts);
                     model.Tracks = model.Tracks.OrderBy(t => t.StartTime).ToList();
 
+                    var logFilePath = @"C:\Logs\log123.txt";
+
+                    using (StreamWriter writer = new StreamWriter(logFilePath, true))
+                    {
+
+                        Console.WriteLine($"Object: {model.Object.Id}, {model.Object.Name}, {model.Object.WorkTime}, {model.Object.EndTime}");
+                        writer.WriteLine($"Object: {model.Object.Id}, {model.Object.Name}, {model.Object.WorkTime}, {model.Object.EndTime}");
+
+                        foreach (var track in model.Tracks.OrderBy(mt => mt.StartTime))
+                        {
+                            Console.WriteLine($"track.StartTime {track.StartTime} - track.Name {track.Name}, TypeCode {track.TypeCode} Length {track.Length}");
+                            // Записываем в лог-файл
+                            writer.WriteLine($"track.StartTime {track.StartTime} - track.Name {track.Name}, TypeCode {track.TypeCode} Length {track.Length}");
+                        }
+
+                        foreach (var track in adverts.OrderBy(mt => mt.StartTime))
+                        {
+                            Console.WriteLine($"track.StartTime {track.StartTime} - track.Name {track.Name}, TypeCode {track.TypeCode} Length {track.Length}");
+                            // Записываем в лог-файл
+                            writer.WriteLine($"track.StartTime {track.StartTime} - track.Name {track.Name}, TypeCode {track.TypeCode} Length {track.Length}");
+                        }
+
+                    }
                     var fileContent = _mediaPlanExcelReportCreator.Create(model);
                     files.Add(fileContent);  // Сохраняем содержимое файла для каждого отчета
                     fileName = $"{query.Date.ToString("d", CultureInfo.CurrentCulture)}_{playlist.Object.Name}_{DateTime.Now}.xlsx";  // Пример формирования имени файла

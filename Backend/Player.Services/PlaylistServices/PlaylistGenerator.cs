@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -101,11 +102,16 @@ public class PlaylistGenerator : BasePlaylistGenerator
 
         var musicTracks = await _trackLoader.LoadForObject(objectInfo, cancellationToken); //Метод LoadForObject асинхронно загружает музыкальные треки, которые должны быть включены в плейлист для данного объекта (objectInfo). Используется cancellationToken для возможности отмены операции, если это потребуется. Загруженные треки сохраняются в переменной musicTracks.
 
-        PopulateMusicTracks(playlistEnvelope.Playlist, objectInfo, musicTracks); //Метод PopulateMusicTracks используется для добавления загруженных музыкальных треков в плейлист. Он принимает текущий плейлист, информацию об объекте и список музыкальных треков, и распределяет их в плейлисте согласно заданным правилам и ограничениям.
+        var logFilePath = @"C:\Logs\log.txt"; // Путь к файлу лога
+
+        PopulateMusicTracks(playlistEnvelope.Playlist, objectInfo, musicTracks, logFilePath); //Метод PopulateMusicTracks используется для добавления загруженных музыкальных треков в плейлист. Он принимает текущий плейлист, информацию об объекте и список музыкальных треков, и распределяет их в плейлисте согласно заданным правилам и ограничениям.
         var notFittedAdverts = PopulateAdverts(playlistEnvelope.Playlist, objectInfo, allAdverts); //PopulateAdverts распределяет рекламные блоки из списка allAdverts по плейлисту. Метод возвращает список реклам, которые не удалось вместить в плейлист (notFittedAdverts). Это может быть связано с ограничениями по времени, количеству повторений или другими правилами.
 
         //Распределяет рекламные и музыкальные треки по плейлисту, учитывая заданные ограничения по времени и правила.
         CalculatePlaylistLoading(objectInfo, playlistEnvelope); //Метод CalculatePlaylistLoading выполняет финальный расчет загрузки плейлиста, учитывая все рекламные и музыкальные треки, уже распределенные в плейлисте. Он проверяет, соответствует ли итоговая композиция плейлиста всем требованиям и ограничениям.
+
+
+        // WriteToLogFile(playlistEnvelope.Playlist, logFilePath, objectInfo, musicTracks);
 
         playlistEnvelope.Playlist.PlaylistInfos.Add(new PlaylistInfo
         {//Здесь добавляется информационный блок в плейлист, который содержит детали процесса генерации (собранные в DebugInfo) и дату создания этой информации. Это может быть полезно для аудита или отладки процесса генерации плейлиста.
@@ -115,6 +121,12 @@ public class PlaylistGenerator : BasePlaylistGenerator
 
         return GeneratedStatus(playlistEnvelope.Playlist, DebugInfo, notFittedAdverts); //Возвращает результат генерации, который включает в себя сам плейлист и информацию о рекламах, которые не уместились в плейлист. Метод GeneratedStatus формирует и возвращает результат генерации плейлиста, который включает сам плейлист, отладочную информацию и список реклам, которые не уместились в плейлист. Это финальный этап процесса, когда пользователь или другие части системы получают готовый продукт с необходимыми метаданными.
     }
+
+    private MusicTrack GetCurrentMusicTrack(object musicTrackEnumerator)
+    {
+        throw new NotImplementedException();
+    }
+
 
     private List<Advert> PopulateAdverts(Playlist playlist, ObjectInfo objectInfo, ICollection<Advert> adverts)
     //Этот код отвечает за распределение рекламных блоков в плейлисте с учетом заданных временных параметров и правил
@@ -193,7 +205,60 @@ public class PlaylistGenerator : BasePlaylistGenerator
         //return remainingAdverts;: Возвращает список реклам, которые не были включены в плейлист. Эти рекламы либо будут использованы позже, либо не найдут своего места в плейлисте из-за временных ограничений.
     }
 
-    private void PopulateMusicTracks(Playlist playlist, ObjectInfo objectInfo, ICollection<MusicTrack> musicTracks)
+    // private void WriteToLogFile(Playlist playlist, string logFilePath, ObjectInfo objectInfo, ICollection<MusicTrack> musicTracks)
+    // {
+    //     using IEnumerator<MusicTrack> musicTrackEnumerator = musicTracks.GetEnumerator(); //Создает перечислитель для коллекции музыкальных треков, чтобы последовательно итерировать по ним.
+    //     musicTrackEnumerator.MoveNext(); // Перемещаемся к первому треку перед началом цикла
+    //     // todo проверить 24 часа    
+    //     // Открываем или создаем файл лога
+    //     using (StreamWriter writer = new StreamWriter(logFilePath))
+    //     {
+    //         var currentTime = objectInfo.BeginTime;
+    //         while (currentTime <= objectInfo.EndTime)
+    //         {
+    //             var currentTrack = GetCurrentMusicTrack(musicTrackEnumerator);
+    //             if (currentTrack == null)
+    //             {
+    //                 DebugInfo.Add("Reached end of music tracks.");
+    //                 break;
+    //             }
+    //             var musicTrackPlaylist = new MusicTrackPlaylist
+    //             {
+    //                 Playlist = playlist,
+    //                 MusicTrack = currentTrack,
+    //                 PlayingDateTime = playlist.PlayingDate.Add(currentTime),
+    //             };
+
+    //             // Выводим в консоль currentTime и PlayingDateTime
+    //             Console.WriteLine($"Current Time: {currentTime}, PlayingDateTime: {musicTrackPlaylist.PlayingDateTime}");
+
+    //             // Записываем в лог-файл
+    //             writer.WriteLine($"Current Time: {currentTime}, PlayingDateTime: {musicTrackPlaylist.PlayingDateTime}");
+
+    //             currentTime = currentTime.Add(currentTrack.Length); // Переходим к следующему времени
+    //         }
+    //     }
+    //     MusicTrack GetCurrentMusicTrack(IEnumerator<MusicTrack> enumerator)
+    //     //Эта функция GetCurrentMusicTrack используется для получения текущего музыкального трека из коллекции музыкальных треков:
+    //     {
+    //         if (!enumerator.MoveNext())
+    //         //if (enumerator.MoveNext()): Проверяет, существует ли следующий элемент в коллекции (в данном случае в списке музыкальных треков). Метод MoveNext перемещает перечислитель к следующему элементу в коллекции.
+
+    //         {
+    //             enumerator.Reset(); //enumerator.Reset();: Если в коллекции не осталось элементов (метод MoveNext вернул false), метод Reset сбрасывает перечислитель к началу коллекции, так что он снова указывает на место перед первым элементом коллекции.
+    //             enumerator.MoveNext(); // Переместиться к первому элементу после сброса
+    //             // return enumerator.Current;
+    //             // //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
+    //         }
+    //         return enumerator.Current;
+    //         //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
+    //         // enumerator.Reset(); //enumerator.Reset();: Если в коллекции не осталось элементов (метод MoveNext вернул false), метод Reset сбрасывает перечислитель к началу коллекции, так что он снова указывает на место перед первым элементом коллекции.
+    //         // return GetCurrentMusicTrack(enumerator); //return GetCurrentMusicTrack(enumerator);: После сброса перечислителя метод рекурсивно вызывает себя, чтобы начать перебор с начала коллекции и получить первый музыкальный трек после сброса. Это гарантирует, что музыкальные треки будут повторно использоваться в плейлисте, если все треки уже были проиграны.
+    //     }
+
+    // }
+
+    private void PopulateMusicTracks(Playlist playlist, ObjectInfo objectInfo, ICollection<MusicTrack> musicTracks, string logFilePath)
     //Этот код отвечает за заполнение плейлиста музыкальными треками
     {
         if (!musicTracks.Any())
@@ -202,31 +267,41 @@ public class PlaylistGenerator : BasePlaylistGenerator
             return; // Выход, если треков нет.
         }
         playlist.MusicTracks.Clear(); //Эта строка удаляет все существующие музыкальные треки из плейлиста, чтобы начать распределение заново.
-        var currentTime = objectInfo.BeginTime; //var currentTime = objectInfo.BeginTime;: Устанавливает начальное время воспроизведения музыкальных треков равным времени начала работы объекта (например, открытия магазина или ресторана).
-        
+
         using IEnumerator<MusicTrack> musicTrackEnumerator = musicTracks.GetEnumerator(); //Создает перечислитель для коллекции музыкальных треков, чтобы последовательно итерировать по ним.
         musicTrackEnumerator.MoveNext(); // Перемещаемся к первому треку перед началом цикла
-        // todo проверить 24 часа
-        while (currentTime <= objectInfo.EndTime) //Цикл продолжается до тех пор, пока текущее время не превысит время окончания работы объекта.
+                                         // todo проверить 24 часа
+        using (StreamWriter writer = new StreamWriter(logFilePath, true))
         {
-            var currentTrack = GetCurrentMusicTrack(musicTrackEnumerator); //Вызывает метод, который получает следующий музыкальный трек из коллекции. Если треки закончились, перечислитель начинается сначала.
-            if (currentTrack == null)
+            var currentTime = objectInfo.BeginTime; //var currentTime = objectInfo.BeginTime;: Устанавливает начальное время воспроизведения музыкальных треков равным времени начала работы объекта (например, открытия магазина или ресторана).
+            int playlistNumber = 1; // начальное значение счетчика
+            while (currentTime <= objectInfo.EndTime) //Цикл продолжается до тех пор, пока текущее время не превысит время окончания работы объекта.
             {
-                DebugInfo.Add("Reached end of music tracks.");
-                break; // Выход из цикла, если треков больше нет
+                var currentTrack = GetCurrentMusicTrack(musicTrackEnumerator); //Вызывает метод, который получает следующий музыкальный трек из коллекции. Если треки закончились, перечислитель начинается сначала.
+                if (currentTrack == null)
+                {
+                    DebugInfo.Add("Reached end of music tracks.");
+                    break; // Выход из цикла, если треков больше нет
+                }
+                var musicTrackPlaylist = new MusicTrackPlaylist
+                {
+                    Playlist = playlist,
+                    MusicTrack = currentTrack,
+                    PlayingDateTime = playlist.PlayingDate.Add(currentTime), //Создает новый экземпляр MusicTrackPlaylist, который связывает текущий музыкальный трек с плейлистом и временем его воспроизведения.
+                };
+
+                Console.WriteLine($"Current Time: {currentTime}, PlayingDateTime: {musicTrackPlaylist.PlayingDateTime}, MusicTrack: {musicTrackPlaylist.MusicTrack.FilePath}");
+
+                // Записываем в лог-файл
+                writer.WriteLine($"Current Time: {currentTime}, PlayingDateTime: {musicTrackPlaylist.PlayingDateTime}, MusicTrack: {musicTrackPlaylist.MusicTrack.FilePath}");
+
+                playlist.MusicTracks.Add(musicTrackPlaylist); //Добавляет созданный музыкальный блок плейлиста к списку музыкальных треков плейлиста.
+                DebugInfo.Add($"MusicTrack {currentTrack.Name} - {musicTrackPlaylist.PlayingDateTime:HH:mm:ss}"); //Добавляет информацию о музыкальном треке и его времени воспроизведения в список отладочной информации.
+
+                currentTime += currentTrack.Length.RoundUp().Add(AdvertsCalculationHelper.GapForClient); //Обновляет текущее время, добавляя к нему длительность текущего музыкального трека и зазор между треками. Это гарантирует, что между концом одного трека и началом следующего будет время на зазор и возможную рекламу.
+                playlistNumber++; // увеличиваем счетчик для следующего плейлиста
             }
-            var musicTrackPlaylist = new MusicTrackPlaylist
-            {
-                Playlist = playlist,
-                MusicTrack = currentTrack,
-                PlayingDateTime = playlist.PlayingDate.Add(currentTime), //Создает новый экземпляр MusicTrackPlaylist, который связывает текущий музыкальный трек с плейлистом и временем его воспроизведения.
-            };
-            playlist.MusicTracks.Add(musicTrackPlaylist); //Добавляет созданный музыкальный блок плейлиста к списку музыкальных треков плейлиста.
-            DebugInfo.Add($"MusicTrack {currentTrack.Name} - {musicTrackPlaylist.PlayingDateTime:HH:mm:ss}"); //Добавляет информацию о музыкальном треке и его времени воспроизведения в список отладочной информации.
-
-            currentTime += currentTrack.Length.RoundUp().Add(AdvertsCalculationHelper.GapForClient); //Обновляет текущее время, добавляя к нему длительность текущего музыкального трека и зазор между треками. Это гарантирует, что между концом одного трека и началом следующего будет время на зазор и возможную рекламу.
         }
-
         MusicTrack GetCurrentMusicTrack(IEnumerator<MusicTrack> enumerator)
         //Эта функция GetCurrentMusicTrack используется для получения текущего музыкального трека из коллекции музыкальных треков:
         {
@@ -236,8 +311,8 @@ public class PlaylistGenerator : BasePlaylistGenerator
             {
                 enumerator.Reset(); //enumerator.Reset();: Если в коллекции не осталось элементов (метод MoveNext вернул false), метод Reset сбрасывает перечислитель к началу коллекции, так что он снова указывает на место перед первым элементом коллекции.
                 enumerator.MoveNext(); // Переместиться к первому элементу после сброса
-                // return enumerator.Current;
-                // //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
+                                       // return enumerator.Current;
+                                       // //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
             }
             return enumerator.Current;
             //return enumerator.Current;: Если следующий элемент существует (метод MoveNext вернул true), метод возвращает этот текущий музыкальный трек. Свойство Current содержит текущий элемент в коллекции, на который указывает перечислитель.
@@ -256,7 +331,7 @@ public class PlaylistGenerator : BasePlaylistGenerator
     //Этот код относится к сервису для генерации плейлистов и вычисления их загрузки в системе управления медиа-контентом. Давайте разберем каждую строку:
     {
         playlistEnvelope.Playlist.Loading = _playlistLoadingCalculator.GetLoading(objectInfo, playlistEnvelope.Playlist); //Вычисляет общую загрузку плейлиста на основании анализа содержимого и установок объекта.
-        playlistEnvelope.Playlist.UniqueAdvertsCount = playlistEnvelope.Playlist.Aderts.Select(a => a.Advert).Distinct().Count(); 
+        playlistEnvelope.Playlist.UniqueAdvertsCount = playlistEnvelope.Playlist.Aderts.Select(a => a.Advert).Distinct().Count();
         //Считает количество уникальных рекламных блоков в плейлисте.
         playlistEnvelope.Playlist.AdvertsCount = playlistEnvelope.Playlist.Aderts.Select(a => a.Advert).Count(); //Считает общее количество рекламных блоков в плейлисте.
 

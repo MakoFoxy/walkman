@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -144,6 +145,12 @@ namespace Player.Services
                 worksheet.Cells[rowNumber, ActualTrackEndColumn].Value = GetActualTrackEnd(playlist, insertedRowCount).ToString(@"hh\:mm\:ss");
                 worksheet.Cells[rowNumber, TrackEndDiffColumn].Value = GetPlaningTrackEnd(track).Subtract(GetActualTrackEnd(playlist, insertedRowCount)).ToString(@"hh\:mm\:ss");
 
+                
+                if (track == playlist.Tracks.OrderBy(m => m.StartTime).First()){
+                Console.WriteLine(track.StartTime);
+                Console.WriteLine(track.StartTime.ToString("T"));
+                Console.WriteLine(worksheet.Cells[rowNumber, StartTimeColumn].Value);
+            }
                 // Получаем продолжительность блока и если она не нулевая, заполняем соответствующую ячейку.
                 var blockLength = GetBlockLength(playlist, insertedRowCount);
                 worksheet.Cells[rowNumber, BlockLengthColumn].Value = blockLength == null ? "" : blockLength.Value.ToString(@"hh\:mm\:ss");

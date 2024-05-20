@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -20,7 +21,13 @@ namespace Player.PlaylistGenerator
     {
         public static void Main(string[] args)
         //Определяет точку входа в программу. Метод Main является стартовым методом приложения.
-        {
+        { // Создание директории для логов, если она не существует
+            var logDirectory = @"C:\Logs";
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+
             Console.InputEncoding = Encoding.Unicode;
             Console.OutputEncoding = Encoding.Unicode;
             ///Задает кодировку Unicode для ввода и вывода в консоль, что позволяет правильно отображать символы в различных языках.
@@ -29,11 +36,27 @@ namespace Player.PlaylistGenerator
                 Debug.WriteLine(msg);
                 //Включает внутреннее логирование для Serilog, что позволяет отслеживать потенциальные ошибки конфигурации логирования.
             });
+            // Временный логгер для логирования до создания хоста
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.File(@"C:\Logs\temp_loger.txt")
+                .CreateLogger();
+
+            // Логируем перед созданием хоста
+            Log.Information("Starting to build the host");
+
             var host = CreateHostBuilder(args).UseConsoleLifetime().Build();
+
+            // Логируем после успешного создания хоста
+            Log.Information("Host built successfully");
+            Log.Information($"Host details: {host.Services}");
+
             //Создает и конфигурирует хост ASP.NET Core, устанавливает время жизни хоста, связанное с консолью, и собирает хост.
             var logger = host.Services.GetRequiredService<ILogger<Program>>();
             var configuration = host.Services.GetRequiredService<IConfiguration>();
             //Извлекает из контейнера зависимостей логгер и конфигурацию, предназначенные для текущего приложения.
+            // Логируем информацию о хосте
+            logger.LogTrace($"Host details: {host.Services}");
             logger.LogTrace("App started");
             //Записывает в журнал сообщение о том, что приложение начало работу.
             try
@@ -84,7 +107,10 @@ namespace Player.PlaylistGenerator
                         .AsImplementedInterfaces();
                     //Регистрирует все типы из сборки, где находится PlaylistGenerator, как их собственные типы и как реализации интерфейсов, которые они имплементируют. Это позволяет Autofac автоматически решать зависимости при создании объектов этих классов.
                 }))
-                .UseSerilogConfigured();
+                .UseSerilog((context, configuration) =>
+                {
+                    configuration.ReadFrom.Configuration(context.Configuration);
+                });
         //Настройка Serilog в качестве системы логирования для приложения. Предполагается, что где-то в другом месте программы или в конфигурационных файлах заданы параметры для Serilog, такие как формат сообщений, уровень логирования и назначение вывода (файлы, консоль, удаленные системы логирования и т.д.).
     }
 }
