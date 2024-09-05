@@ -80,16 +80,16 @@ namespace Player.ReportSender
             await using var context = scope.ServiceProvider.GetRequiredService<PlayerContext>();
             var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
 
-            // var clients = await context.Clients
-            //     .Include(c => c.Organization)
-            //     .Include(m => m.User.Objects)
-            //     .ThenInclude(o => o.Object)
-            //     .ThenInclude(o => o.City)
-            //     .Where(m => m.User.TelegramChatId.HasValue)
-            //     .Where(c => !c.User.Role.RolePermissions.Any(rp => rp.Permission.Code == Permission.PartnerAccessToObject))
-            //     .ToListAsync(stoppingToken);
+            var clients = await context.Clients
+                .Include(c => c.Organization)
+                .Include(m => m.User.Objects)
+                .ThenInclude(o => o.Object)
+                .ThenInclude(o => o.City)
+                .Where(m => m.User.TelegramChatId.HasValue)
+                .Where(c => !c.User.Role.RolePermissions.Any(rp => rp.Permission.Code == Permission.PartnerAccessToObject))
+                .ToListAsync(stoppingToken);
             //Запрашивает из базы данных список клиентов, у которых есть действующий Telegram чат ID и которые не имеют доступа к объекту в роли партнера. Создается контекст для извлечения данных клиентов и историй рекламных объявлений.
-            // var allObjects = clients.SelectMany(u => u.User.Objects).Select(o => o.Object);
+            var allObjects = clients.SelectMany(u => u.User.Objects).Select(o => o.Object);
 
             var yesterday = DateTime.Today.AddDays(-1);
 
