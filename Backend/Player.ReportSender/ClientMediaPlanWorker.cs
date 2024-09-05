@@ -52,7 +52,7 @@ namespace Player.ReportSender
                 var nextWakeUpTime = DateTime.Now.Add(timeLeft);
 
                 _logger.LogInformation("Worker wake up at {Time}", nextWakeUpTime);
-                await Task.Delay(timeLeft, stoppingToken);
+              //  await Task.Delay(timeLeft, stoppingToken);
                 _logger.LogInformation("Worker woke up");
 
                 try
@@ -80,16 +80,16 @@ namespace Player.ReportSender
             await using var context = scope.ServiceProvider.GetRequiredService<PlayerContext>();
             var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
 
-            var clients = await context.Clients
-                .Include(c => c.Organization)
-                .Include(m => m.User.Objects)
-                .ThenInclude(o => o.Object)
-                .ThenInclude(o => o.City)
-                .Where(m => m.User.TelegramChatId.HasValue)
-                .Where(c => !c.User.Role.RolePermissions.Any(rp => rp.Permission.Code == Permission.PartnerAccessToObject))
-                .ToListAsync(stoppingToken);
+            // var clients = await context.Clients
+            //     .Include(c => c.Organization)
+            //     .Include(m => m.User.Objects)
+            //     .ThenInclude(o => o.Object)
+            //     .ThenInclude(o => o.City)
+            //     .Where(m => m.User.TelegramChatId.HasValue)
+            //     .Where(c => !c.User.Role.RolePermissions.Any(rp => rp.Permission.Code == Permission.PartnerAccessToObject))
+            //     .ToListAsync(stoppingToken);
             //Запрашивает из базы данных список клиентов, у которых есть действующий Telegram чат ID и которые не имеют доступа к объекту в роли партнера. Создается контекст для извлечения данных клиентов и историй рекламных объявлений.
-            var allObjects = clients.SelectMany(u => u.User.Objects).Select(o => o.Object);
+            // var allObjects = clients.SelectMany(u => u.User.Objects).Select(o => o.Object);
 
             var yesterday = DateTime.Today.AddDays(-1);
 
@@ -100,6 +100,20 @@ namespace Player.ReportSender
                 .Where(ah => allObjects.Contains(ah.Object) && ah.End.Date == yesterday)
                 .ToListAsync(stoppingToken);
             //Получает список всех рекламных историй для объектов, связанных с этими клиентами, за вчерашний день.
+
+
+            var userObjects = await context.Users
+            .Where(u => u.Id == u.Id) // Здесь возможно нужно заменить фильтрацию на конкретный Id
+            .SelectMany(u => u.Objects) // Доступ к объектам напрямую
+            .Select(o => o.ObjectId) // Извлечение ObjectId
+            .ToListAsync(stoppingToken);
+
+            // Извлечение всех объектов из таблицы Objects
+            var objects = await context.Objects
+                .ToListAsync(stoppingToken);
+
+            var matchedObjects = objects.Where(o => userObjects.Contains(o.Id)).ToList();
+
             foreach (var client in clients) //Для каждого клиента, если есть данные по рекламным активностям его объектов, генерируется и отправляется отчет в PDF формате через Telegram.
             {
                 //Для каждого клиента генерируется и отправляется отчет по каждому объекту, если для этого объекта были рекламные истории. Если нет рекламных историй для конкретного объекта, отправка отчета пропускается.
@@ -142,7 +156,7 @@ namespace Player.ReportSender
                         });
 
                         await telegramMessageSender.SendReport(client.User.TelegramChatId!.Value,
-                        //Используя сервис для отправки сообщений в Telegram, отчет в формате PDF отправляется клиенту.
+                            //Используя сервис для отправки сообщений в Telegram, отчет в формате PDF отправляется клиенту.
                             generatorResult.Report,
                             $"{generatorResult.FileName}.{generatorResult.FileType}",
                             $"Доброе утро {client.User.SecondName} {client.User.LastName}, Ваш отчет по объекту {o.Name} за {yesterday:dd.MM.yyyy}");
